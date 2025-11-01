@@ -1,0 +1,2 @@
+-- ShopVerse Database Schema & Sample Data
+-- Created: 2025-11-01
