@@ -40,6 +40,8 @@ backend/.classpath
 backend/.project
 backend/.settings/
 backend/*.log
+# Sensitive configuration files
+backend/src/main/resources/application.yml
 
 # Database
 *.db
