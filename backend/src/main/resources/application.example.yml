@@ -33,6 +33,11 @@ spring:
       include-stacktrace: on_param
       include-exception: false
 
+# JWT Configuration
+jwt:
+  secret: your-secret-key-change-this-in-production-min-256-bits-required-for-hs512-algorithm-your-secret-key-change-this-in-production-min-256-bits-required-for-hs512-algorithm
+  expiration: 86400000 # 24 hours in milliseconds
+
 # Logging Configuration
 logging:
   level:
