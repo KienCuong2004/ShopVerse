@@ -1,65 +1,137 @@
-import Image from "next/image";
+"use client";
+
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { MainLayout } from "@/components/layout";
+import { Button, Card } from "@/components/ui";
+import { useAuth } from "@/hooks/useAuth";
+import { Loading } from "@/components/ui";
+import { FaTruck, FaLock, FaStar } from "react-icons/fa";
 
 export default function Home() {
+  const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading size="lg" text="Loading..." />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <MainLayout
+      isAuthenticated={isAuthenticated}
+      username={user?.username}
+      cartItemCount={0}
+    >
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                Welcome to ShopVerse
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 text-blue-100">
+                Your trusted online marketplace for quality products
+              </p>
+              {!isAuthenticated ? (
+                <div className="flex justify-center gap-4">
+                  <Link href="/register">
+                    <Button variant="primary" size="lg">
+                      Get Started
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-white text-blue-600 hover:bg-gray-100"
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex justify-center gap-4">
+                  <Link href="/products">
+                    <Button variant="primary" size="lg">
+                      Browse Products
+                    </Button>
+                  </Link>
+                  <Link href="/cart">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-white text-blue-600 hover:bg-gray-100"
+                    >
+                      View Cart
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
+              Why Choose ShopVerse?
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="text-center p-6">
+                <div className="flex justify-center mb-4">
+                  <FaTruck className="text-4xl text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
+                <p className="text-gray-600">
+                  Quick and reliable shipping to your doorstep
+                </p>
+              </Card>
+              <Card className="text-center p-6">
+                <div className="flex justify-center mb-4">
+                  <FaLock className="text-4xl text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
+                <p className="text-gray-600">
+                  Your transactions are safe and secure
+                </p>
+              </Card>
+              <Card className="text-center p-6">
+                <div className="flex justify-center mb-4">
+                  <FaStar className="text-4xl text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Quality Products</h3>
+                <p className="text-gray-600">
+                  Only the best products from trusted sellers
+                </p>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <section className="py-16 bg-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">
+              Ready to start shopping?
+            </h2>
+            <p className="text-lg text-gray-600 mb-8">
+              Explore our wide range of products and find what you need
+            </p>
+            <Link href={isAuthenticated ? "/products" : "/register"}>
+              <Button variant="primary" size="lg">
+                {isAuthenticated ? "Browse Products" : "Create Account"}
+              </Button>
+            </Link>
+          </div>
+        </section>
+      </div>
+    </MainLayout>
   );
 }

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/cleanup.js && next dev",
+    "cleanup": "node scripts/cleanup.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -16,6 +17,7 @@
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-icons": "^5.5.0",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
