@@ -85,9 +85,19 @@ public class UserService {
         return true;
     }
     
+    public User getUserEntityByUsernameOrEmail(String usernameOrEmail) {
+        return userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username/email", usernameOrEmail));
+    }
+    
     public User getUserEntity(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+    }
+    
+    public User getUserEntity(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
     
     public List<UserDTO> getAllUsers() {
