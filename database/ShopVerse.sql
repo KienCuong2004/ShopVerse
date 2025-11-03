@@ -198,8 +198,10 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
 -- SAMPLE DATA
 -- ============================================
 
--- Insert Users (password: password123 - bcrypt hash, use Spring Security to hash in real app)
--- For demo: password123 = $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+-- Insert Users (password: password123)
+-- WARNING: The password hash below may not work with Spring Security BCryptPasswordEncoder
+-- After running this script, register a user via API, then run the UPDATE statement at the end of this file
+-- to copy the correct password hash to admin user.
 INSERT INTO users (username, email, password, full_name, phone, address, role) VALUES
 ('admin', 'admin@shopverse.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Administrator', '0123456789', '123 Admin Street, City', 'ADMIN'),
 ('john_doe', 'john.doe@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'John Doe', '0987654321', '456 Main Street, District 1', 'USER'),
@@ -356,3 +358,24 @@ COMMENT ON TABLE orders IS 'Customer orders';
 COMMENT ON TABLE order_items IS 'Order line items';
 COMMENT ON TABLE reviews IS 'Product reviews and ratings';
 COMMENT ON TABLE payments IS 'Payment transactions';
+
+-- ============================================
+-- FIX ADMIN PASSWORD HASH
+-- ============================================
+-- The password hash in the INSERT above may not work with Spring Security BCryptPasswordEncoder
+-- After registering a user via API (which uses BCryptPasswordEncoder), run this UPDATE to fix admin password:
+-- UPDATE users SET password = (SELECT password FROM users WHERE username = 'testuser' LIMIT 1) WHERE username = 'admin';
+-- 
+-- Or update all users with the same working password hash:
+-- DO $$
+-- DECLARE
+--     working_hash VARCHAR(255);
+-- BEGIN
+--     -- Get hash from a user created via register API (testuser)
+--     SELECT password INTO working_hash FROM users WHERE username = 'testuser' LIMIT 1;
+--     
+--     -- If testuser exists, update admin with the same hash
+--     IF working_hash IS NOT NULL THEN
+--         UPDATE users SET password = working_hash WHERE username = 'admin';
+--     END IF;
+-- END $$;
