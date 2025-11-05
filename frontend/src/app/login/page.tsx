@@ -3,9 +3,20 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button, Input, useToast } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginRequest, ApiError } from "@/types";
+import {
+  FaUser,
+  FaLock,
+  FaShoppingBag,
+  FaEnvelope,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
+import { HiArrowRight } from "react-icons/hi";
+import { FcGoogle } from "react-icons/fc";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -16,18 +27,19 @@ const LoginPage: React.FC = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.usernameOrEmail.trim()) {
-      newErrors.usernameOrEmail = "Username or email is required";
+      newErrors.usernameOrEmail = "Email hoặc tên đăng nhập là bắt buộc";
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Mật khẩu là bắt buộc";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
     setErrors(newErrors);
@@ -43,12 +55,15 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(formData);
-      showToast("Login successful!", "success");
+      showToast("Đăng nhập thành công!", "success");
       router.push("/");
       router.refresh();
     } catch (error) {
       const apiError = error as ApiError;
-      showToast(apiError.message || "Login failed. Please try again.", "error");
+      showToast(
+        apiError.message || "Đăng nhập thất bại. Vui lòng thử lại.",
+        "error"
+      );
     }
   };
 
@@ -62,86 +77,153 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link
-              href="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              create a new account
-            </Link>
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl w-full">
+        <div className="flex justify-center">
+          {/* Login Form */}
+          <div className="w-full max-w-4xl">
+            {/* Login Card - Dark Theme */}
+            <div className="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                {/* Left Side - Image inside form */}
+                <div className="hidden lg:block relative min-h-[500px]">
+                  <Image
+                    src="/assets/images/Sign_in.png"
+                    alt="ShopVerse Đăng nhập"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+
+                {/* Right Side - Login Form */}
+                <div className="p-8 space-y-6 flex flex-col justify-center">
+                  {/* Header with Icon and Title */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                      <HiArrowRight className="text-white text-xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-blue-600">
+                      Đăng nhập
+                    </h2>
+                  </div>
+
+                  <form className="space-y-5" onSubmit={handleSubmit}>
+                    {/* Email Input */}
+                    <div>
+                      <Input
+                        label=""
+                        type="email"
+                        name="usernameOrEmail"
+                        value={formData.usernameOrEmail}
+                        onChange={handleChange}
+                        error={errors.usernameOrEmail}
+                        required
+                        leftIcon={<FaEnvelope className="w-5 h-5 text-white" />}
+                        className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+                        autoComplete="email"
+                        placeholder="Email"
+                      />
+                    </div>
+
+                    {/* Password Input */}
+                    <div>
+                      <Input
+                        label=""
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={errors.password}
+                        required
+                        leftIcon={<FaLock className="w-5 h-5 text-white" />}
+                        rightIcon={
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowPassword(!showPassword);
+                            }}
+                            className="text-gray-400 hover:text-white transition-colors focus:outline-none"
+                            aria-label={
+                              showPassword ? "Hide password" : "Show password"
+                            }
+                          >
+                            {showPassword ? (
+                              <FaEyeSlash className="w-5 h-5" />
+                            ) : (
+                              <FaEye className="w-5 h-5" />
+                            )}
+                          </button>
+                        }
+                        className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+                        autoComplete="current-password"
+                        placeholder="Mật khẩu"
+                      />
+                    </div>
+
+                    {/* Forgot Password */}
+                    <div className="text-left">
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                      >
+                        Quên mật khẩu?
+                      </Link>
+                    </div>
+
+                    {/* Login Button */}
+                    <div>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        fullWidth
+                        size="lg"
+                        isLoading={isLoading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                      >
+                        {!isLoading && <span>Đăng nhập</span>}
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* Divider */}
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-600"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-gray-800 text-gray-400">
+                        hoặc
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Google Login Button */}
+                  <div>
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-3 bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white rounded-lg px-4 py-3 font-medium transition-all duration-200"
+                    >
+                      <FcGoogle className="w-5 h-5" />
+                      <span>Đăng nhập bằng Google</span>
+                    </button>
+                  </div>
+
+                  {/* Register Link */}
+                  <div className="text-center">
+                    <p className="text-sm text-gray-400">
+                      Chưa có tài khoản?{" "}
+                      <span className="text-blue-600 font-medium">
+                        Liên hệ quản trị viên
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <Input
-              label="Username or Email"
-              type="text"
-              name="usernameOrEmail"
-              value={formData.usernameOrEmail}
-              onChange={handleChange}
-              error={errors.usernameOrEmail}
-              required
-              className="rounded-t-md"
-              autoComplete="username"
-            />
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-              className="rounded-b-md"
-              autoComplete="current-password"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link
-                href="/forgot-password"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              size="lg"
-              isLoading={isLoading}
-            >
-              Sign in
-            </Button>
-          </div>
-        </form>
       </div>
     </div>
   );
