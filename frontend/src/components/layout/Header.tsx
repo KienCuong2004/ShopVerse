@@ -132,13 +132,8 @@ const Header: React.FC<HeaderProps> = ({
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register">
                   <Button variant="primary" size="sm">
-                    Sign Up
+                    Login
                   </Button>
                 </Link>
               </div>
