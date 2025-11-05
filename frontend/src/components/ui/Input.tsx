@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useId } from 'react';
-import { cn } from '@/utils/cn';
+import React, { useId } from "react";
+import { cn } from "@/utils/cn";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -22,7 +22,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       leftIcon,
       rightIcon,
       id,
-      type = 'text',
+      type = "text",
       ...props
     },
     ref
@@ -43,7 +43,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
               {leftIcon}
             </div>
           )}
@@ -51,18 +51,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             id={inputId}
             className={cn(
-              'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+              "block w-full h-12 px-4 rounded-lg border-2 border-blue-200 bg-white text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200",
+              "focus:border-blue-600 focus:ring-2 focus:ring-blue-200 focus:outline-none",
               error &&
-                'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+                "border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-200",
+              leftIcon && "pl-12",
+              rightIcon && "pr-12",
               className
             )}
             ref={ref}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400">
               {rightIcon}
             </div>
           )}
@@ -80,7 +81,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export default Input;
-
