@@ -5,6 +5,7 @@ export { categoriesApi } from "./categories";
 export { cartApi } from "./cart";
 export { ordersApi } from "./orders";
 export { reviewsApi } from "./reviews";
+export { usersApi } from "./users";
 
 // Export API client
 export { default as apiClient } from "./api";
