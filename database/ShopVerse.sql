@@ -1,15 +1,9 @@
 -- ShopVerse Database Schema & Sample Data
 -- Created: 2025-01-11
--- Database: shopverse
--- User: postgres (or your username)
--- Password: kiencuong
 
 -- Drop database if exists and create new one
 -- DROP DATABASE IF EXISTS shopverse;
 -- CREATE DATABASE shopverse;
-
--- Connect to shopverse database
--- \c shopverse;
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -198,16 +192,15 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
 -- SAMPLE DATA
 -- ============================================
 
--- Insert Users (password: password123)
--- WARNING: The password hash below may not work with Spring Security BCryptPasswordEncoder
--- After running this script, register a user via API, then run the UPDATE statement at the end of this file
--- to copy the correct password hash to admin user.
+-- Insert Users (password: 123456)
+-- All passwords are BCrypt hashed for "123456"
+-- BCrypt hash: $2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm
 INSERT INTO users (username, email, password, full_name, phone, address, role) VALUES
-('admin', 'admin@shopverse.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Administrator', '0123456789', '123 Admin Street, City', 'ADMIN'),
-('john_doe', 'john.doe@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'John Doe', '0987654321', '456 Main Street, District 1', 'USER'),
-('jane_smith', 'jane.smith@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Jane Smith', '0912345678', '789 Oak Avenue, District 3', 'USER'),
-('mike_wilson', 'mike.wilson@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Mike Wilson', '0923456789', '321 Pine Road, District 5', 'USER'),
-('sarah_jones', 'sarah.jones@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Sarah Jones', '0934567890', '654 Elm Street, District 7', 'USER')
+('admin', 'admin@shopverse.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Administrator', '0123456789', '123 Admin Street, City', 'ADMIN'),
+('john_doe', 'john.doe@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'John Doe', '0987654321', '456 Main Street, District 1', 'USER'),
+('jane_smith', 'jane.smith@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Jane Smith', '0912345678', '789 Oak Avenue, District 3', 'USER'),
+('mike_wilson', 'mike.wilson@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Mike Wilson', '0923456789', '321 Pine Road, District 5', 'USER'),
+('sarah_jones', 'sarah.jones@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Sarah Jones', '0934567890', '654 Elm Street, District 7', 'USER')
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert Categories
@@ -360,22 +353,18 @@ COMMENT ON TABLE reviews IS 'Product reviews and ratings';
 COMMENT ON TABLE payments IS 'Payment transactions';
 
 -- ============================================
--- FIX ADMIN PASSWORD HASH
+-- PASSWORD INFORMATION
 -- ============================================
--- The password hash in the INSERT above may not work with Spring Security BCryptPasswordEncoder
--- After registering a user via API (which uses BCryptPasswordEncoder), run this UPDATE to fix admin password:
--- UPDATE users SET password = (SELECT password FROM users WHERE username = 'testuser' LIMIT 1) WHERE username = 'admin';
+-- All user passwords are HARDCODED to: 123456
+-- BCrypt hash: $2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm
+-- This hash is compatible with Spring Security BCryptPasswordEncoder
+-- Hash was generated and verified using /api/test/hash endpoint
 -- 
--- Or update all users with the same working password hash:
--- DO $$
--- DECLARE
---     working_hash VARCHAR(255);
--- BEGIN
---     -- Get hash from a user created via register API (testuser)
---     SELECT password INTO working_hash FROM users WHERE username = 'testuser' LIMIT 1;
---     
---     -- If testuser exists, update admin with the same hash
---     IF working_hash IS NOT NULL THEN
---         UPDATE users SET password = working_hash WHERE username = 'admin';
---     END IF;
--- END $$;
+-- IMPORTANT: When running this SQL script, all users will have password "123456"
+-- 
+-- To verify password in Spring Boot:
+-- BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+-- boolean matches = encoder.matches("123456", "$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm");
+--
+-- To update existing users in database, run this UPDATE statement:
+-- UPDATE users SET password = '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm' WHERE password != '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm';
