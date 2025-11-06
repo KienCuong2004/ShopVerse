@@ -4,20 +4,26 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loading } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push("/login");
       } else {
-        router.push("/products");
+        // Redirect admin to users management, others to products
+        if (user?.role === UserRole.ADMIN) {
+          router.push("/admin/users");
+        } else {
+          router.push("/products");
+        }
       }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, user, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

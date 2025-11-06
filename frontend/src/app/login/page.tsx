@@ -20,7 +20,7 @@ import { FcGoogle } from "react-icons/fc";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState<LoginRequest>({
     usernameOrEmail: "",
@@ -56,8 +56,13 @@ const LoginPage: React.FC = () => {
     try {
       await login(formData);
       showToast("Đăng nhập thành công!", "success");
-      router.push("/");
-      router.refresh();
+      // Wait a bit for user state to update
+      setTimeout(() => {
+        // Redirect admin to users management page, others to home
+        // User state will be updated by AuthContext after login
+        router.push("/");
+        router.refresh();
+      }, 100);
     } catch (error) {
       const apiError = error as ApiError;
       showToast(
