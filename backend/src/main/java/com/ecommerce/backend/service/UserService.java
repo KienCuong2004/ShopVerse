@@ -6,11 +6,14 @@ import com.ecommerce.backend.dto.UserDTO;
 import com.ecommerce.backend.exception.ResourceAlreadyExistsException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.exception.UnauthorizedException;
+import com.ecommerce.backend.exception.InvalidRequestException;
 import com.ecommerce.backend.model.User;
 import com.ecommerce.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,6 +127,25 @@ public class UserService {
         
         User updatedUser = userRepository.save(user);
         return new UserDTO(updatedUser);
+    }
+
+    @Transactional
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication != null ? authentication.getName() : null;
+
+        if (user.getRole() == User.UserRole.ADMIN) {
+            throw new InvalidRequestException("Không thể xóa tài khoản quản trị viên");
+        }
+
+        if (currentUsername != null && user.getUsername().equalsIgnoreCase(currentUsername)) {
+            throw new InvalidRequestException("Bạn không thể tự xóa tài khoản của mình");
+        }
+ 
+        userRepository.delete(user);
     }
 }
 

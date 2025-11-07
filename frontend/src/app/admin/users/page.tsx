@@ -9,15 +9,11 @@ import { UpdateUserRequest } from "@/utils/api/users";
 import { User, UserRole } from "@/types";
 import {
   FaUsers,
-  FaEdit,
-  FaTrash,
   FaSearch,
   FaUserShield,
   FaUser,
   FaCheck,
   FaTimes,
-  FaLock,
-  FaUnlock,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
@@ -33,10 +29,13 @@ const UsersManagementPage: React.FC = () => {
   const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<UpdateUserRequest>({});
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -75,8 +74,11 @@ const UsersManagementPage: React.FC = () => {
   }, [searchTerm]);
 
   const fetchUsers = async (page: number) => {
-    try {
+    const showFullScreenLoader = !hasLoaded && users.length === 0;
+    if (showFullScreenLoader) {
       setIsLoading(true);
+    }
+    try {
       const response = await usersApi.getAllUsers({
         page,
         size: pageSize,
@@ -86,10 +88,15 @@ const UsersManagementPage: React.FC = () => {
       setUsers(response.content);
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
+      if (!hasLoaded) {
+        setHasLoaded(true);
+      }
     } catch (error: any) {
       showToast(error.message || "Không thể tải danh sách người dùng", "error");
     } finally {
-      setIsLoading(false);
+      if (showFullScreenLoader) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -138,26 +145,45 @@ const UsersManagementPage: React.FC = () => {
     }
   };
 
-  const handleToggleEnabled = async (user: User) => {
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
     try {
-      const updatedUser = await usersApi.updateUser(user.id, {
-        enabled: !user.enabled,
-      });
-      setUsers((prev) =>
-        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+      await usersApi.deleteUser(userToDelete.id);
+      showToast("Đã xóa người dùng thành công!", "success");
+
+      const nextTotal = totalElements - 1;
+      const maxPageIndex = Math.max(
+        Math.ceil(Math.max(nextTotal, 0) / pageSize) - 1,
+        0
       );
-      showToast(
-        `Đã ${updatedUser.enabled ? "kích hoạt" : "vô hiệu hóa"} người dùng`,
-        "success"
-      );
-      // Refresh current page
-      fetchUsers(currentPage);
+      const nextPage = Math.min(currentPage, maxPageIndex);
+
+      if (nextPage !== currentPage) {
+        setCurrentPage(nextPage);
+      } else {
+        fetchUsers(currentPage);
+      }
     } catch (error: any) {
-      showToast(
-        error.message || "Không thể thay đổi trạng thái người dùng",
-        "error"
-      );
+      showToast(error.message || "Không thể xóa người dùng", "error");
+    } finally {
+      setUserToDelete(null);
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteClick = (user: User) => {
+    if (user.role === UserRole.ADMIN) {
+      showToast("Không thể xóa tài khoản quản trị viên", "error");
+      return;
+    }
+
+    if (user.username === currentUser?.username) {
+      showToast("Bạn không thể tự xóa tài khoản của mình", "error");
+      return;
+    }
+
+    setUserToDelete(user);
   };
 
   if (authLoading || isLoading) {
@@ -176,51 +202,52 @@ const UsersManagementPage: React.FC = () => {
     <div className="min-h-screen bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+        <div className="mb-8 space-y-6">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
               <button
                 onClick={() => router.push("/")}
                 className="p-2 text-gray-400 hover:text-white transition-colors"
+                aria-label="Quay lại"
               >
                 <HiArrowLeft className="w-6 h-6" />
               </button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
                   <FaUsers className="text-white text-xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">
                     Quản lý người dùng
                   </h1>
-                  <p className="text-gray-400 mt-1">
+                  <p className="text-gray-400 mt-1 text-sm sm:text-base">
                     Quản lý tất cả người dùng trong hệ thống
                   </p>
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right">
               <p className="text-sm text-gray-400">Tổng số người dùng</p>
               <p className="text-2xl font-bold text-white">{totalElements}</p>
             </div>
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-md">
+          <div className="w-full md:max-w-md">
             <Input
               type="text"
               placeholder="Tìm kiếm theo tên, email, số điện thoại..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               leftIcon={<FaSearch className="w-5 h-5 text-gray-400" />}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+              className="bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 rounded-2xl"
             />
           </div>
         </div>
 
         {/* Users Table */}
-        <Card className="bg-gray-800 border-gray-700 rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
+        <Card className="bg-gray-800 border-gray-700 rounded-2xl overflow-hidden shadow-lg">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-700">
@@ -315,29 +342,43 @@ const UsersManagementPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleEdit(user)}
-                            className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-colors"
-                            title="Chỉnh sửa"
+                            className="border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
                           >
-                            <FaEdit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleEnabled(user)}
-                            className={`p-2 rounded-xl transition-colors ${
-                              user.enabled
-                                ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                : "text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                            Sửa
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={
+                              user.role === UserRole.ADMIN ||
+                              user.username === currentUser?.username
+                                ? "secondary"
+                                : "danger"
+                            }
+                            disabled={
+                              user.role === UserRole.ADMIN ||
+                              user.username === currentUser?.username
+                            }
+                            onClick={() => handleDeleteClick(user)}
+                            className={`${
+                              user.role === UserRole.ADMIN ||
+                              user.username === currentUser?.username
+                                ? "bg-gray-700 text-gray-400 hover:bg-gray-700 cursor-not-allowed"
+                                : "bg-red-600/80 hover:bg-red-500 text-white"
                             }`}
-                            title={user.enabled ? "Vô hiệu hóa" : "Kích hoạt"}
+                            title={
+                              user.role === UserRole.ADMIN ||
+                              user.username === currentUser?.username
+                                ? "Không thể xóa tài khoản quản trị viên hoặc tài khoản của bạn"
+                                : undefined
+                            }
                           >
-                            {user.enabled ? (
-                              <FaLock className="w-4 h-4" />
-                            ) : (
-                              <FaUnlock className="w-4 h-4" />
-                            )}
-                          </button>
+                            Xóa
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -347,15 +388,135 @@ const UsersManagementPage: React.FC = () => {
             </table>
           </div>
 
+          {/* Mobile List */}
+          <div className="md:hidden">
+            {filteredUsers.length === 0 ? (
+              <div className="px-4 py-10 text-center text-gray-400">
+                {searchTerm
+                  ? "Không tìm thấy người dùng nào"
+                  : "Chưa có người dùng nào"}
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-700">
+                {filteredUsers.map((user) => (
+                  <div key={user.id} className="p-4 space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <p className="text-white font-semibold text-lg">
+                            {user.username}
+                          </p>
+                          <p className="text-sm text-gray-400 break-words">
+                            {user.email}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium self-start ${
+                            user.role === UserRole.ADMIN
+                              ? "bg-purple-500/20 text-purple-300"
+                              : "bg-blue-500/20 text-blue-300"
+                          }`}
+                        >
+                          {user.role === UserRole.ADMIN ? (
+                            <FaUserShield className="w-4 h-4" />
+                          ) : (
+                            <FaUser className="w-4 h-4" />
+                          )}
+                          {user.role === UserRole.ADMIN
+                            ? "Quản trị viên"
+                            : "Người dùng"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-300">
+                        <div>
+                          <p className="text-gray-400">Họ tên</p>
+                          <p className="font-medium text-white">
+                            {user.fullName || "-"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Số điện thoại</p>
+                          <p className="font-medium text-white">
+                            {user.phone || "-"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Trạng thái</p>
+                          <span
+                            className={`mt-1 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                              user.enabled
+                                ? "bg-green-500/20 text-green-300"
+                                : "bg-red-500/20 text-red-300"
+                            }`}
+                          >
+                            {user.enabled ? (
+                              <>
+                                <FaCheck className="w-4 h-4" />
+                                Hoạt động
+                              </>
+                            ) : (
+                              <>
+                                <FaTimes className="w-4 h-4" />
+                                Vô hiệu hóa
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                      <Button
+                        onClick={() => handleEdit(user)}
+                        size="sm"
+                        variant="outline"
+                        className="w-full sm:w-auto border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        onClick={() => handleDeleteClick(user)}
+                        size="sm"
+                        variant={
+                          user.role === UserRole.ADMIN ||
+                          user.username === currentUser?.username
+                            ? "secondary"
+                            : "danger"
+                        }
+                        disabled={
+                          user.role === UserRole.ADMIN ||
+                          user.username === currentUser?.username
+                        }
+                        className={`w-full sm:w-auto ${
+                          user.role === UserRole.ADMIN ||
+                          user.username === currentUser?.username
+                            ? "bg-gray-700 text-gray-400 hover:bg-gray-700 cursor-not-allowed"
+                            : "bg-red-600/80 hover:bg-red-500 text-white"
+                        }`}
+                        title={
+                          user.role === UserRole.ADMIN ||
+                          user.username === currentUser?.username
+                            ? "Không thể xóa tài khoản quản trị viên hoặc tài khoản của bạn"
+                            : undefined
+                        }
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700">
-              <div className="text-sm text-gray-400">
+            <div className="flex flex-col gap-4 px-4 py-4 border-t border-gray-700 md:flex-row md:items-center md:justify-between md:px-6">
+              <div className="text-sm text-gray-400 text-center md:text-left">
                 Hiển thị {currentPage * pageSize + 1} -{" "}
                 {Math.min((currentPage + 1) * pageSize, totalElements)} trong
                 tổng số {totalElements} người dùng
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => setCurrentPage(0)}
                   disabled={currentPage === 0}
@@ -563,9 +724,49 @@ const UsersManagementPage: React.FC = () => {
                   setSelectedUser(null);
                   setEditFormData({});
                 }}
-                className="flex-1 bg-gray-700 hover:bg-gray-600"
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
               >
                 Hủy
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={Boolean(userToDelete)}
+          onClose={() => {
+            if (!isDeleting) {
+              setUserToDelete(null);
+            }
+          }}
+          title="Xác nhận xóa người dùng"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-300">
+              Bạn có chắc chắn muốn xóa người dùng{" "}
+              <span className="font-semibold text-white">
+                {userToDelete ? `"${userToDelete.username}"` : ""}
+              </span>
+              ? Hành động này không thể hoàn tác.
+            </p>
+            <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
+              <Button
+                variant="secondary"
+                onClick={() => !isDeleting && setUserToDelete(null)}
+                disabled={isDeleting}
+                className="bg-gray-700 hover:bg-gray-600 text-white"
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDeleteConfirm}
+                isLoading={isDeleting}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-500 text-white"
+              >
+                Xóa người dùng
               </Button>
             </div>
           </div>

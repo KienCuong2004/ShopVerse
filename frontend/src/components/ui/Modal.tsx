@@ -77,7 +77,7 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal Content */}
       <div
         className={cn(
-          "relative bg-white rounded-lg shadow-xl w-full",
+          "relative w-full border border-gray-700 bg-gray-900 text-white rounded-2xl shadow-2xl",
           sizes[size],
           "transform transition-all"
         )}
@@ -85,11 +85,11 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
             {title && (
               <h2
                 id="modal-title"
-                className="text-xl font-semibold text-gray-900"
+                className="text-xl font-semibold text-white"
               >
                 {title}
               </h2>
@@ -97,7 +97,7 @@ const Modal: React.FC<ModalProps> = ({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-1"
+                className="text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-1"
                 aria-label="Close modal"
               >
                 <svg
@@ -125,7 +125,7 @@ const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+          <div className="px-6 py-4 border-t border-gray-800 bg-gray-900 rounded-b-2xl">
             {footer}
           </div>
         )}
