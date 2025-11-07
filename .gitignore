@@ -40,6 +40,9 @@ backend/.classpath
 backend/.project
 backend/.settings/
 backend/*.log
+backend/node_modules/
+backend/package-lock.json
+backend/package.json
 # Sensitive configuration files
 backend/src/main/resources/application.yml
 
