@@ -200,7 +200,12 @@ INSERT INTO users (username, email, password, full_name, phone, address, role) V
 ('john_doe', 'john.doe@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'John Doe', '0987654321', '456 Main Street, District 1', 'USER'),
 ('jane_smith', 'jane.smith@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Jane Smith', '0912345678', '789 Oak Avenue, District 3', 'USER'),
 ('mike_wilson', 'mike.wilson@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Mike Wilson', '0923456789', '321 Pine Road, District 5', 'USER'),
-('sarah_jones', 'sarah.jones@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Sarah Jones', '0934567890', '654 Elm Street, District 7', 'USER')
+('sarah_jones', 'sarah.jones@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Sarah Jones', '0934567890', '654 Elm Street, District 7', 'USER'),
+('disabled_user', 'disabled.user@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Disabled User', '0945678901', '876 Fifth Avenue, District 9', 'USER'),
+('admin_disabled', 'admin.disabled@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Admin Disabled', '0956789012', '987 Sixth Avenue, District 11', 'ADMIN'),
+('user_disabled', 'user.disabled@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'User Disabled', '0967890123', '109 Eighth Avenue, District 13', 'USER'),
+('admin_disabled_user', 'admin.disabled.user@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Admin Disabled User', '0978901234', '120 Tenth Avenue, District 15', 'ADMIN'),
+('user_disabled_admin', 'user.disabled.admin@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'User Disabled Admin', '0989012345', '131 Twelfth Avenue, District 17', 'USER')
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert Categories
