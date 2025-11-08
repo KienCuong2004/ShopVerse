@@ -2,8 +2,9 @@
 -- Created: 2025-01-11
 
 -- Drop database if exists and create new one
--- DROP DATABASE IF EXISTS shopverse;
--- CREATE DATABASE shopverse;
+-- WARNING: Dropping the entire database will erase ALL data.
+DROP DATABASE IF EXISTS "ShopVerse";
+CREATE DATABASE "ShopVerse";
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -260,41 +261,40 @@ BEGIN
     
     INSERT INTO products (name, description, price, discount_price, stock_quantity, sku, category_id, image_url, status, rating, total_reviews) VALUES
     -- Electronics
-    ('iPhone 15 Pro', 'Latest iPhone with A17 Pro chip, 256GB storage', 999.99, 899.99, 50, 'IPH15PRO256', smartphones_id, 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab', 'ACTIVE', 4.8, 125),
-    ('MacBook Pro 16"', 'M3 Max chip, 32GB RAM, 1TB SSD', 2499.99, NULL, 25, 'MBP16M3MAX', laptops_id, 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8', 'ACTIVE', 4.9, 89),
-    ('Samsung Galaxy S24 Ultra', '200MP camera, 512GB storage, S Pen included', 1199.99, 1099.99, 30, 'SGAL24U512', smartphones_id, 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf', 'ACTIVE', 4.7, 156),
-    ('AirPods Pro 2', 'Active noise cancellation, spatial audio', 249.99, 199.99, 100, 'AIRPODSPRO2', electronics_id, 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb', 'ACTIVE', 4.6, 203),
-    ('Sony WH-1000XM5', 'Industry-leading noise canceling headphones', 399.99, 349.99, 40, 'SONYWH1000XM5', electronics_id, 'https://images.unsplash.com/photo-1484704849700-f032a568e944', 'ACTIVE', 4.8, 178),
+    ('iPhone 15 Pro', 'Latest iPhone with A17 Pro chip, 256GB storage', 29990000, 27990000, 50, 'IPH15PRO256', smartphones_id, '/assets/images/products/iphone-15-pro.jpg', 'ACTIVE', 4.8, 125),
+    ('MacBook Pro 16"', 'M3 Max chip, 32GB RAM, 1TB SSD', 69990000, NULL, 25, 'MBP16M3MAX', laptops_id, '/assets/images/products/macbook-pro-16.jpg', 'ACTIVE', 4.9, 89),
+    ('Samsung Galaxy S24 Ultra', '200MP camera, 512GB storage, S Pen included', 25990000, 23990000, 30, 'SGAL24U512', smartphones_id, '/assets/images/products/samsung-galaxy-s24-ultra.jpg', 'ACTIVE', 4.7, 156),
+    ('AirPods Pro 2', 'Active noise cancellation, spatial audio', 5490000, 4990000, 100, 'AIRPODSPRO2', electronics_id, '/assets/images/products/airpods-pro-2.jpg', 'ACTIVE', 4.6, 203),
+    ('Sony WH-1000XM5', 'Industry-leading noise canceling headphones', 7990000, 7290000, 40, 'SONYWH1000XM5', electronics_id, '/assets/images/products/sony-wh-1000xm5.jpg', 'ACTIVE', 4.8, 178),
     -- Clothing
-    ('Classic White T-Shirt', '100% cotton, comfortable fit', 19.99, NULL, 200, 'TSHIRT-WHITE', mens_clothing_id, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab', 'ACTIVE', 4.5, 89),
-    ('Denim Jeans', 'Slim fit, stretchable denim', 49.99, 39.99, 150, 'JEANS-SLIM', mens_clothing_id, 'https://images.unsplash.com/photo-1542272604-787c3835535d', 'ACTIVE', 4.4, 112),
-    ('Summer Dress', 'Lightweight floral print dress', 59.99, 49.99, 80, 'DRESS-SUMMER', womens_clothing_id, 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446', 'ACTIVE', 4.6, 134),
-    ('Leather Jacket', 'Genuine leather, classic style', 199.99, 179.99, 45, 'JACKET-LEATHER', mens_clothing_id, 'https://images.unsplash.com/photo-1551028719-00167b16eac5', 'ACTIVE', 4.7, 67),
+    ('Classic White T-Shirt', '100% cotton, comfortable fit', 299000, NULL, 200, 'TSHIRT-WHITE', mens_clothing_id, '/assets/images/products/classic-white-t-shirt.jpg', 'ACTIVE', 4.5, 89),
+    ('Denim Jeans', 'Slim fit, stretchable denim', 899000, 749000, 150, 'JEANS-SLIM', mens_clothing_id, '/assets/images/products/denim-jeans.jpg', 'ACTIVE', 4.4, 112),
+    ('Summer Dress', 'Lightweight floral print dress', 1199000, 999000, 80, 'DRESS-SUMMER', womens_clothing_id, '/assets/images/products/summer-dress.jpg', 'ACTIVE', 4.6, 134),
+    ('Leather Jacket', 'Genuine leather, classic style', 2499000, 2299000, 45, 'JACKET-LEATHER', mens_clothing_id, '/assets/images/products/leather-jacket.jpg', 'ACTIVE', 4.7, 67),
     -- Books
-    ('The Great Gatsby', 'Classic American novel by F. Scott Fitzgerald', 12.99, NULL, 300, 'BOOK-GGATSBY', books_id, 'https://images.unsplash.com/photo-1544947950-fa07a98d237f', 'ACTIVE', 4.8, 456),
-    ('Clean Code', 'A Handbook of Agile Software Craftsmanship', 49.99, 44.99, 150, 'BOOK-CLEANCODE', books_id, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d', 'ACTIVE', 4.9, 234),
-    ('Harry Potter Box Set', 'Complete 7-book collection', 89.99, 79.99, 75, 'BOOK-HPBOXSET', books_id, 'https://images.unsplash.com/photo-1532012197267-da84d127e765', 'ACTIVE', 4.9, 567),
+    ('The Great Gatsby', 'Classic American novel by F. Scott Fitzgerald', 169000, NULL, 300, 'BOOK-GGATSBY', books_id, '/assets/images/products/the-great-gatsby.jpg', 'ACTIVE', 4.8, 456),
+    ('Clean Code', 'A Handbook of Agile Software Craftsmanship', 549000, 499000, 150, 'BOOK-CLEANCODE', books_id, '/assets/images/products/clean-code.jpg', 'ACTIVE', 4.9, 234),
+    ('Harry Potter Box Set', 'Complete 7-book collection', 1299000, 1099000, 75, 'BOOK-HPBOXSET', books_id, '/assets/images/products/harry-potter-box-set.jpg', 'ACTIVE', 4.9, 567),
     -- Home & Garden
-    ('Ceramic Plant Pot', 'Set of 3 decorative plant pots', 24.99, 19.99, 200, 'POT-CERAMIC3', home_garden_id, 'https://images.unsplash.com/photo-1485955900006-10f4d324d411', 'ACTIVE', 4.5, 123),
-    ('LED Desk Lamp', 'Adjustable brightness, USB charging port', 34.99, 29.99, 120, 'LAMP-LEDDESK', home_garden_id, 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c', 'ACTIVE', 4.4, 98),
+    ('Ceramic Plant Pot', 'Set of 3 decorative plant pots', 459000, 399000, 200, 'POT-CERAMIC3', home_garden_id, '/assets/images/products/ceramic-plant-pot.jpg', 'ACTIVE', 4.5, 123),
+    ('LED Desk Lamp', 'Adjustable brightness, USB charging port', 659000, 599000, 120, 'LAMP-LEDDESK', home_garden_id, '/assets/images/products/led-desk-lamp.jpg', 'ACTIVE', 4.4, 98),
     -- Sports
-    ('Yoga Mat', 'Premium non-slip yoga mat, 6mm thickness', 29.99, NULL, 180, 'SPORT-YOGAMAT', sports_id, 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f', 'ACTIVE', 4.6, 145),
-    ('Running Shoes', 'Lightweight running shoes with cushioning', 89.99, 79.99, 100, 'SHOES-RUNNING', sports_id, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff', 'ACTIVE', 4.7, 189),
+    ('Yoga Mat', 'Premium non-slip yoga mat, 6mm thickness', 399000, NULL, 180, 'SPORT-YOGAMAT', sports_id, '/assets/images/products/yoga-mat.jpg', 'ACTIVE', 4.6, 145),
+    ('Running Shoes', 'Lightweight running shoes with cushioning', 1499000, 1299000, 100, 'SHOES-RUNNING', sports_id, '/assets/images/products/running-shoes.jpg', 'ACTIVE', 4.7, 189),
     -- Toys & Games
-    ('Chess Set', 'Wooden chess set with board', 39.99, 34.99, 90, 'TOY-CHESSSET', toys_games_id, 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b', 'ACTIVE', 4.5, 78),
-    ('Lego Creator Set', 'Lego building blocks set with 500 pieces', 49.99, NULL, 150, 'TOY-LEGO500', toys_games_id, 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64', 'ACTIVE', 4.8, 234)
+    ('Chess Set', 'Wooden chess set with board', 699000, 629000, 90, 'TOY-CHESSSET', toys_games_id, '/assets/images/products/chess-set.jpg', 'ACTIVE', 4.5, 78),
+    ('Lego Creator Set', 'Lego building blocks set with 500 pieces', 1199000, NULL, 150, 'TOY-LEGO500', toys_games_id, '/assets/images/products/lego-creator-set.jpg', 'ACTIVE', 4.8, 234)
     ON CONFLICT (sku) DO NOTHING;
 END $$;
 
 -- Insert Product Images
 INSERT INTO product_images (product_id, image_url, is_primary, display_order) VALUES
-((SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab', TRUE, 0),
-((SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd', FALSE, 1),
-((SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8', TRUE, 0),
-((SELECT id FROM products WHERE name = 'Samsung Galaxy S24 Ultra' LIMIT 1), 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf', TRUE, 0),
-((SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb', TRUE, 0),
-((SELECT id FROM products WHERE name = 'Classic White T-Shirt' LIMIT 1), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab', TRUE, 0),
-((SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446', TRUE, 0)
+((SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), '/assets/images/products/iphone-15-pro.jpg', TRUE, 0),
+((SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), '/assets/images/products/macbook-pro-16.jpg', TRUE, 0),
+((SELECT id FROM products WHERE name = 'Samsung Galaxy S24 Ultra' LIMIT 1), '/assets/images/products/samsung-galaxy-s24-ultra.jpg', TRUE, 0),
+((SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), '/assets/images/products/airpods-pro-2.jpg', TRUE, 0),
+((SELECT id FROM products WHERE name = 'Classic White T-Shirt' LIMIT 1), '/assets/images/products/classic-white-t-shirt.jpg', TRUE, 0),
+((SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), '/assets/images/products/summer-dress.jpg', TRUE, 0)
 ON CONFLICT DO NOTHING;
 
 -- Insert Cart Items
