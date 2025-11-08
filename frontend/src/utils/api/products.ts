@@ -1,22 +1,42 @@
 import apiClient from "./api";
-import { Product, ProductRequest, PaginatedResponse } from "@/types";
+import {
+  Product,
+  ProductRequest,
+  PaginatedResponse,
+  ProductStatus,
+} from "@/types";
+
+export interface GetProductsParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: "ASC" | "DESC";
+  keyword?: string;
+  categoryId?: string;
+  status?: ProductStatus | "";
+  lowStock?: boolean;
+}
 
 export const productsApi = {
-  // Get all products with pagination
+  // Get all products with optional filters
   getAll: async (
-    page = 0,
-    size = 20,
-    sort?: string
+    params?: GetProductsParams
   ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      size: size.toString(),
-    });
-    if (sort) {
-      params.append("sort", sort);
-    }
+    const query = new URLSearchParams();
+    if (params?.page !== undefined)
+      query.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      query.append("size", params.size.toString());
+    if (params?.sortBy) query.append("sortBy", params.sortBy);
+    if (params?.sortDir) query.append("sortDir", params.sortDir);
+    if (params?.keyword) query.append("keyword", params.keyword);
+    if (params?.categoryId) query.append("categoryId", params.categoryId);
+    if (params?.status) query.append("status", params.status);
+    if (params?.lowStock) query.append("lowStock", String(params.lowStock));
+
+    const queryString = query.toString();
     return await apiClient.get<PaginatedResponse<Product>>(
-      `/products?${params.toString()}`
+      `/products${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -25,70 +45,15 @@ export const productsApi = {
     return await apiClient.get<Product>(`/products/${id}`);
   },
 
-  // Search products
+  // Search products (fallback helper)
   search: async (
-    query: string,
-    page = 0,
-    size = 20,
-    sort?: string
+    keyword: string,
+    params?: Omit<GetProductsParams, "keyword">
   ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams({
-      query,
-      page: page.toString(),
-      size: size.toString(),
+    return await productsApi.getAll({
+      keyword,
+      ...params,
     });
-    if (sort) {
-      params.append("sort", sort);
-    }
-    return await apiClient.get<PaginatedResponse<Product>>(
-      `/products/search?${params.toString()}`
-    );
-  },
-
-  // Get products by category
-  getByCategory: async (
-    categoryId: string,
-    page = 0,
-    size = 20,
-    sort?: string
-  ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams({
-      categoryId,
-      page: page.toString(),
-      size: size.toString(),
-    });
-    if (sort) {
-      params.append("sort", sort);
-    }
-    return await apiClient.get<PaginatedResponse<Product>>(
-      `/products/category?${params.toString()}`
-    );
-  },
-
-  // Get products by price range
-  getByPriceRange: async (
-    minPrice?: number,
-    maxPrice?: number,
-    page = 0,
-    size = 20,
-    sort?: string
-  ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      size: size.toString(),
-    });
-    if (minPrice !== undefined) {
-      params.append("minPrice", minPrice.toString());
-    }
-    if (maxPrice !== undefined) {
-      params.append("maxPrice", maxPrice.toString());
-    }
-    if (sort) {
-      params.append("sort", sort);
-    }
-    return await apiClient.get<PaginatedResponse<Product>>(
-      `/products/price?${params.toString()}`
-    );
   },
 
   // Get available products (in stock)
@@ -108,6 +73,6 @@ export const productsApi = {
 
   // Delete product (Admin only)
   delete: async (id: string): Promise<void> => {
-    return await apiClient.delete<void>(`/products/${id}`);
+    await apiClient.delete<void>(`/products/${id}`);
   },
 };
