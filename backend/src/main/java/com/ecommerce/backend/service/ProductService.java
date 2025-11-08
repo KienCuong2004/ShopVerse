@@ -13,13 +13,16 @@ import com.ecommerce.backend.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import jakarta.persistence.criteria.JoinType;
 
 @Service
 @RequiredArgsConstructor
@@ -28,10 +31,11 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
+    private static final int LOW_STOCK_THRESHOLD = 5;
     
+    @Transactional(readOnly = true)
     public Page<ProductDTO> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable)
-                .map(ProductDTO::new);
+        return getProducts(null, null, null, null, pageable);
     }
     
     public ProductDTO getProductById(UUID id) {
@@ -54,6 +58,51 @@ public class ProductService {
     public Page<ProductDTO> getProductsByStatus(Product.ProductStatus status, Pageable pageable) {
         return productRepository.findByStatus(status, pageable)
                 .map(ProductDTO::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductDTO> getProducts(String keyword, UUID categoryId, Product.ProductStatus status, Boolean lowStock, Pageable pageable) {
+        Specification<Product> specification = Specification.where((root, query, cb) -> cb.conjunction());
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            final String likeValue = "%" + keyword.trim().toLowerCase() + "%";
+            specification = specification.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("name")), likeValue),
+                    cb.like(cb.lower(root.get("description")), likeValue),
+                    cb.like(cb.lower(root.get("sku")), likeValue)
+            ));
+        }
+
+        if (categoryId != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.join("category", JoinType.LEFT).get("id"), categoryId)
+            );
+        }
+
+        if (status != null) {
+            specification = specification.and((root, query, cb) ->
+                    cb.equal(root.get("status"), status)
+            );
+        }
+
+        if (Boolean.TRUE.equals(lowStock)) {
+            specification = specification.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("stockQuantity"), LOW_STOCK_THRESHOLD)
+            );
+        }
+
+        Page<Product> pageResult = productRepository.findAll(specification, pageable);
+
+        pageResult.getContent().forEach(product -> {
+            if (product.getCategory() != null) {
+                product.getCategory().getName();
+            }
+            if (product.getImages() != null) {
+                product.getImages().size();
+            }
+        });
+
+        return pageResult.map(ProductDTO::new);
     }
     
     public Page<ProductDTO> searchProducts(String keyword, Pageable pageable) {
@@ -92,8 +141,14 @@ public class ProductService {
         product.setStockQuantity(productRequestDTO.getStockQuantity());
         product.setSku(productRequestDTO.getSku());
         product.setCategory(category);
+        if (Objects.isNull(productRequestDTO.getImageUrl()) &&
+                productRequestDTO.getImageUrls() != null &&
+                !productRequestDTO.getImageUrls().isEmpty()) {
+            productRequestDTO.setImageUrl(productRequestDTO.getImageUrls().get(0));
+        }
+
         product.setImageUrl(productRequestDTO.getImageUrl());
-        product.setStatus(productRequestDTO.getStatus());
+        product.setStatus(productRequestDTO.getStatus() != null ? productRequestDTO.getStatus() : product.getStatus());
         product.setRating(BigDecimal.ZERO);
         product.setTotalReviews(0);
         
@@ -140,11 +195,32 @@ public class ProductService {
         product.setDiscountPrice(productRequestDTO.getDiscountPrice());
         product.setStockQuantity(productRequestDTO.getStockQuantity());
         product.setSku(productRequestDTO.getSku());
+        if (Objects.isNull(productRequestDTO.getImageUrl()) &&
+                productRequestDTO.getImageUrls() != null &&
+                !productRequestDTO.getImageUrls().isEmpty()) {
+            productRequestDTO.setImageUrl(productRequestDTO.getImageUrls().get(0));
+        }
         product.setImageUrl(productRequestDTO.getImageUrl());
-        product.setStatus(productRequestDTO.getStatus());
+        product.setStatus(productRequestDTO.getStatus() != null ? productRequestDTO.getStatus() : product.getStatus());
         
         Product updatedProduct = productRepository.save(product);
-        return new ProductDTO(updatedProduct);
+
+        if (productRequestDTO.getImageUrls() != null) {
+            productImageRepository.deleteByProductId(updatedProduct.getId());
+            for (int i = 0; i < productRequestDTO.getImageUrls().size(); i++) {
+                ProductImage image = new ProductImage();
+                image.setProduct(updatedProduct);
+                image.setImageUrl(productRequestDTO.getImageUrls().get(i));
+                image.setIsPrimary(i == 0);
+                image.setDisplayOrder(i);
+                productImageRepository.save(image);
+            }
+        }
+
+        Product refreshedProduct = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+
+        return new ProductDTO(refreshedProduct);
     }
     
     @Transactional

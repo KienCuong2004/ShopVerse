@@ -2,6 +2,7 @@ package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.ProductDTO;
 import com.ecommerce.backend.dto.ProductRequestDTO;
+import com.ecommerce.backend.exception.InvalidRequestException;
 import com.ecommerce.backend.model.Product;
 import com.ecommerce.backend.service.ProductService;
 import jakarta.validation.Valid;
@@ -31,14 +32,27 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir) {
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            @RequestParam(required = false, name = "keyword") String keyword,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean lowStock) {
         
         Sort sort = sortDir.equalsIgnoreCase("ASC") 
                 ? Sort.by(sortBy).ascending() 
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        Page<ProductDTO> products = productService.getAllProducts(pageable);
+        Product.ProductStatus productStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                productStatus = Product.ProductStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidRequestException("Trạng thái sản phẩm không hợp lệ: " + status);
+            }
+        }
+        
+        Page<ProductDTO> products = productService.getProducts(keyword, categoryId, productStatus, lowStock, pageable);
         return ResponseEntity.ok(products);
     }
     
