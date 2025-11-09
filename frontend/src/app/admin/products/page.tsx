@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button, Card, Input, Loading, Modal, useToast } from "@/components/ui";
@@ -21,14 +27,42 @@ import {
   FaChevronRight,
   FaFilter,
   FaLayerGroup,
-  FaImage,
   FaPlus,
   FaTags,
   FaTimes,
+  FaUpload,
 } from "react-icons/fa";
 
 const STOCK_WARNING_THRESHOLD = 5;
 const PAGE_SIZE = 10;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE_MB = 5;
+
+const mergeImagePaths = (
+  existing: string[],
+  additions: string[],
+  formType: FormMode
+): { next: string[]; added: string[] } => {
+  const uniqueAdditions = additions.filter(
+    (path) => path && !existing.includes(path)
+  );
+
+  if (uniqueAdditions.length === 0) {
+    return { next: existing, added: [] };
+  }
+
+  if (formType === "edit") {
+    return {
+      next: [...uniqueAdditions, ...existing],
+      added: uniqueAdditions,
+    };
+  }
+
+  return {
+    next: [...existing, ...uniqueAdditions],
+    added: uniqueAdditions,
+  };
+};
 
 const defaultProductForm: ProductRequest = {
   name: "",
@@ -105,8 +139,10 @@ const ProductsManagementPage: React.FC = () => {
 
   const [createImages, setCreateImages] = useState<string[]>([]);
   const [editImages, setEditImages] = useState<string[]>([]);
-  const [newCreateImageUrl, setNewCreateImageUrl] = useState("");
-  const [newEditImageUrl, setNewEditImageUrl] = useState("");
+  const [isCreateUploading, setIsCreateUploading] = useState(false);
+  const [isEditUploading, setIsEditUploading] = useState(false);
+  const createFileInputRef = useRef<HTMLInputElement | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -231,7 +267,10 @@ const ProductsManagementPage: React.FC = () => {
   const resetCreateForm = () => {
     setCreateForm({ ...defaultProductForm });
     setCreateImages([]);
-    setNewCreateImageUrl("");
+    setIsCreateUploading(false);
+    if (createFileInputRef.current) {
+      createFileInputRef.current.value = "";
+    }
   };
 
   const closeCreateModal = () => {
@@ -260,7 +299,6 @@ const ProductsManagementPage: React.FC = () => {
           ? [product.imageUrl]
           : [];
     setEditImages(images);
-    setNewEditImageUrl("");
     setIsEditModalOpen(true);
   };
 
@@ -269,7 +307,10 @@ const ProductsManagementPage: React.FC = () => {
     setSelectedProduct(null);
     setEditForm(null);
     setEditImages([]);
-    setNewEditImageUrl("");
+    setIsEditUploading(false);
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = "";
+    }
   };
 
   const openDeleteModal = (product: Product) => {
@@ -353,59 +394,118 @@ const ProductsManagementPage: React.FC = () => {
     }
   };
 
-  const handleAddImageUrl = (formType: FormMode) => {
-    const rawValue =
-      formType === "create" ? newCreateImageUrl.trim() : newEditImageUrl.trim();
+  const uploadImagesFromFiles = useCallback(
+    async (files: File[], formType: FormMode) => {
+      if (files.length === 0) {
+        return;
+      }
 
-    if (!rawValue) {
-      showToast("Vui lòng nhập đường dẫn hình ảnh hợp lệ", "warning");
-      return;
-    }
-
-    const isValidUrl = /^https?:\/\/.+/i.test(rawValue);
-    if (!isValidUrl) {
-      showToast(
-        "Đường dẫn hình ảnh phải bắt đầu bằng http hoặc https",
-        "error"
+      const invalidType = files.find(
+        (file) => !ACCEPTED_IMAGE_TYPES.includes(file.type)
       );
+      if (invalidType) {
+        showToast(
+          "Chỉ hỗ trợ định dạng JPG, PNG hoặc WEBP. Vui lòng chọn lại.",
+          "error"
+        );
+        return;
+      }
+
+      const oversized = files.find(
+        (file) => file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024
+      );
+      if (oversized) {
+        showToast(
+          `Ảnh ${oversized.name} vượt quá giới hạn ${MAX_IMAGE_SIZE_MB}MB.`,
+          "error"
+        );
+        return;
+      }
+
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
+
+      const setUploading =
+        formType === "create" ? setIsCreateUploading : setIsEditUploading;
+      setUploading(true);
+
+      try {
+        const response = await fetch("/api/uploads", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = (await response.json()) as {
+          paths?: string[];
+          error?: string;
+        };
+
+        if (!response.ok || !result.paths || result.paths.length === 0) {
+          throw new Error(
+            result.error || "Không thể tải ảnh lên. Vui lòng thử lại."
+          );
+        }
+
+        const sanitizePaths = result.paths.filter((path) => !!path);
+
+        const { next: mergedImages, added } = mergeImagePaths(
+          formType === "create" ? createImages : editImages,
+          sanitizePaths,
+          formType
+        );
+
+        if (added.length === 0) {
+          showToast("Những ảnh này đã tồn tại trong danh sách.", "info");
+          return;
+        }
+
+        if (formType === "create") {
+          setCreateImages(mergedImages);
+          setCreateForm((form) => ({
+            ...form,
+            imageUrl: mergedImages[0] || "",
+            imageUrls: mergedImages,
+          }));
+        } else {
+          setEditImages(mergedImages);
+          setEditForm((form) =>
+            form
+              ? {
+                  ...form,
+                  imageUrl: mergedImages[0] || "",
+                  imageUrls: mergedImages,
+                }
+              : form
+          );
+        }
+
+        showToast("Đã tải ảnh lên thành công!", "success");
+      } catch (error) {
+        showToast(
+          resolveErrorMessage(
+            error,
+            "Không thể tải ảnh lên. Vui lòng thử lại."
+          ),
+          "error"
+        );
+      } finally {
+        setUploading(false);
+      }
+    },
+    [createImages, editImages, resolveErrorMessage, showToast]
+  );
+
+  const handleImageInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    formType: FormMode
+  ) => {
+    const { files } = event.target;
+    if (!files || files.length === 0) {
       return;
     }
 
-    if (formType === "create") {
-      setCreateImages((prev) => {
-        if (prev.includes(rawValue)) {
-          showToast("Hình ảnh này đã được thêm vào", "info");
-          return prev;
-        }
-        const updated = [...prev, rawValue];
-        setCreateForm((form) => ({
-          ...form,
-          imageUrl: form.imageUrl || rawValue,
-          imageUrls: updated,
-        }));
-        return updated;
-      });
-      setNewCreateImageUrl("");
-    } else if (formType === "edit") {
-      setEditImages((prev) => {
-        if (prev.includes(rawValue)) {
-          showToast("Hình ảnh này đã được thêm vào", "info");
-          return prev;
-        }
-        const updated = [...prev, rawValue];
-        setEditForm((form) =>
-          form
-            ? {
-                ...form,
-                imageUrl: form.imageUrl || rawValue,
-                imageUrls: updated,
-              }
-            : form
-        );
-        return updated;
-      });
-      setNewEditImageUrl("");
-    }
+    await uploadImagesFromFiles(Array.from(files), formType);
+    event.target.value = "";
   };
 
   const handleRemoveImage = (index: number, formType: FormMode) => {
@@ -461,6 +561,14 @@ const ProductsManagementPage: React.FC = () => {
   };
 
   const handleCreateProduct = async () => {
+    if (isCreateUploading) {
+      showToast(
+        "Hệ thống đang tải ảnh lên. Vui lòng chờ hoàn tất trước khi lưu.",
+        "warning"
+      );
+      return;
+    }
+
     if (!validateForm(createForm)) {
       return;
     }
@@ -490,6 +598,14 @@ const ProductsManagementPage: React.FC = () => {
 
   const handleUpdateProduct = async () => {
     if (!selectedProduct || !editForm) {
+      return;
+    }
+
+    if (isEditUploading) {
+      showToast(
+        "Hệ thống đang tải ảnh lên. Vui lòng chờ hoàn tất trước khi lưu.",
+        "warning"
+      );
       return;
     }
 
@@ -545,7 +661,19 @@ const ProductsManagementPage: React.FC = () => {
     }
   };
 
-  const renderImagesPreview = (images: string[], formType: FormMode) => {
+  const renderImagesPreview = (
+    images: string[],
+    formType: FormMode,
+    isUploading: boolean
+  ) => {
+    if (isUploading && images.length === 0) {
+      return (
+        <p className="text-sm text-blue-300">
+          Đang tải ảnh lên, vui lòng chờ trong giây lát...
+        </p>
+      );
+    }
+
     if (images.length === 0) {
       return (
         <p className="text-sm text-gray-400">Chưa có hình ảnh nào được chọn.</p>
@@ -553,31 +681,38 @@ const ProductsManagementPage: React.FC = () => {
     }
 
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {images.map((url, index) => (
-          <div
-            key={`${url}-${index}`}
-            className="relative group rounded-xl overflow-hidden border border-gray-700"
-          >
-            <Image
-              src={url}
-              alt={`Sản phẩm ${index + 1}`}
-              width={400}
-              height={400}
-              className="h-32 w-full object-cover"
-              unoptimized
-            />
-            <button
-              type="button"
-              onClick={() => handleRemoveImage(index, formType)}
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              aria-label="Xóa ảnh"
+      <>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {images.map((url, index) => (
+            <div
+              key={`${url}-${index}`}
+              className="relative group rounded-xl overflow-hidden border border-gray-700"
             >
-              <FaTimes className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
-      </div>
+              <Image
+                src={url}
+                alt={`Sản phẩm ${index + 1}`}
+                width={400}
+                height={400}
+                className="h-32 w-full object-cover"
+                unoptimized
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveImage(index, formType)}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Xóa ảnh"
+              >
+                <FaTimes className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        {isUploading && (
+          <p className="text-xs text-blue-300">
+            Đang tải thêm ảnh, bạn có thể tiếp tục chỉnh sửa thông tin khác.
+          </p>
+        )}
+      </>
     );
   };
 
@@ -1174,31 +1309,33 @@ const ProductsManagementPage: React.FC = () => {
             <h3 className="text-sm font-semibold text-white">
               Hình ảnh sản phẩm
             </h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <Input
-                  type="url"
-                  placeholder="https://domain.com/hinh-anh.jpg"
-                  value={newCreateImageUrl}
-                  onChange={(e) => setNewCreateImageUrl(e.target.value)}
-                  leftIcon={<FaImage className="w-5 h-5 text-gray-400" />}
-                  className="bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500"
-                />
-              </div>
+            <input
+              ref={createFileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => handleImageInputChange(event, "create")}
+            />
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Button
-                onClick={() => handleAddImageUrl("create")}
-                disabled={!newCreateImageUrl.trim()}
+                type="button"
+                onClick={() => createFileInputRef.current?.click()}
+                disabled={isCreateUploading}
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl w-full sm:w-auto"
               >
-                <FaPlus className="w-4 h-4 mr-2" />
-                Thêm ảnh
+                <FaUpload className="w-4 h-4 mr-2" />
+                {isCreateUploading ? "Đang tải ảnh..." : "Chọn ảnh từ máy"}
               </Button>
+              <p className="text-xs text-gray-400 sm:pt-0 sm:mb-0">
+                Hỗ trợ JPG, PNG, WEBP (tối đa {MAX_IMAGE_SIZE_MB}MB mỗi ảnh).
+              </p>
             </div>
             <p className="text-xs text-gray-400">
-              Sử dụng đường dẫn hình ảnh công khai (CDN hoặc lưu trữ tĩnh). Ảnh
-              đầu tiên sẽ được chọn làm ảnh đại diện.
+              Ảnh sẽ được lưu vào thư mục tĩnh `/assets/images/products`. Ảnh
+              đầu tiên trong danh sách sẽ được dùng làm ảnh đại diện.
             </p>
-            {renderImagesPreview(createImages, "create")}
+            {renderImagesPreview(createImages, "create", isCreateUploading)}
           </div>
 
           <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
@@ -1214,7 +1351,7 @@ const ProductsManagementPage: React.FC = () => {
               variant="primary"
               onClick={handleCreateProduct}
               isLoading={isSaving}
-              disabled={isSaving}
+              disabled={isSaving || isCreateUploading}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Lưu sản phẩm
@@ -1338,31 +1475,33 @@ const ProductsManagementPage: React.FC = () => {
               <h3 className="text-sm font-semibold text-white">
                 Hình ảnh sản phẩm
               </h3>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <Input
-                    type="url"
-                    placeholder="https://domain.com/hinh-anh.jpg"
-                    value={newEditImageUrl}
-                    onChange={(e) => setNewEditImageUrl(e.target.value)}
-                    leftIcon={<FaImage className="w-5 h-5 text-gray-400" />}
-                    className="bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500"
-                  />
-                </div>
+              <input
+                ref={editFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(event) => handleImageInputChange(event, "edit")}
+              />
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                 <Button
-                  onClick={() => handleAddImageUrl("edit")}
-                  disabled={!newEditImageUrl.trim()}
+                  type="button"
+                  onClick={() => editFileInputRef.current?.click()}
+                  disabled={isEditUploading}
                   className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl w-full sm:w-auto"
                 >
-                  <FaPlus className="w-4 h-4 mr-2" />
-                  Thêm ảnh
+                  <FaUpload className="w-4 h-4 mr-2" />
+                  {isEditUploading ? "Đang tải ảnh..." : "Chọn ảnh từ máy"}
                 </Button>
+                <p className="text-xs text-gray-400 sm:pt-0 sm:mb-0">
+                  Hỗ trợ JPG, PNG, WEBP (tối đa {MAX_IMAGE_SIZE_MB}MB mỗi ảnh).
+                </p>
               </div>
               <p className="text-xs text-gray-400">
-                Dán đường dẫn hình ảnh từ nguồn lưu trữ đáng tin cậy. Ảnh đầu
-                tiên sẽ được hiển thị làm ảnh chính.
+                Ảnh mới sẽ được lưu cục bộ và thêm vào danh sách hiện tại. Ảnh
+                đầu tiên trong danh sách được dùng làm ảnh chính.
               </p>
-              {renderImagesPreview(editImages, "edit")}
+              {renderImagesPreview(editImages, "edit", isEditUploading)}
             </div>
 
             <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
@@ -1378,7 +1517,7 @@ const ProductsManagementPage: React.FC = () => {
                 variant="primary"
                 onClick={handleUpdateProduct}
                 isLoading={isSaving}
-                disabled={isSaving}
+                disabled={isSaving || isEditUploading}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Cập nhật sản phẩm
