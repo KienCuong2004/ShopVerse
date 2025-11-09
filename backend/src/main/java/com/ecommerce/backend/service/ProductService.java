@@ -62,7 +62,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<ProductDTO> getProducts(String keyword, UUID categoryId, Product.ProductStatus status, Boolean lowStock, Pageable pageable) {
-        Specification<Product> specification = Specification.where((root, query, cb) -> cb.conjunction());
+        Specification<Product> specification = Specification.allOf();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             final String likeValue = "%" + keyword.trim().toLowerCase() + "%";
