@@ -78,3 +78,7 @@ tmp/
 temp/
 *.tmp
 
+
+# Frontend product images (keep folder only)
+frontend/public/assets/images/products/*
+!frontend/public/assets/images/products/.gitkeep
