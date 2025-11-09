@@ -352,11 +352,31 @@ const ProductsManagementPage: React.FC = () => {
       setCreateForm((prev) => ({
         ...prev,
         [field]: nextValue,
+        ...(field === "stockQuantity"
+          ? {
+              status:
+                typeof nextValue === "number" && nextValue <= 0
+                  ? ProductStatus.OUT_OF_STOCK
+                  : prev.status === ProductStatus.OUT_OF_STOCK
+                    ? ProductStatus.ACTIVE
+                    : prev.status,
+            }
+          : {}),
       }));
     } else if (formType === "edit" && editForm) {
       setEditForm({
         ...editForm,
         [field]: nextValue,
+        ...(field === "stockQuantity"
+          ? {
+              status:
+                typeof nextValue === "number" && nextValue <= 0
+                  ? ProductStatus.OUT_OF_STOCK
+                  : editForm.status === ProductStatus.OUT_OF_STOCK
+                    ? ProductStatus.ACTIVE
+                    : editForm.status,
+            }
+          : {}),
       });
     }
   };
