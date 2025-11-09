@@ -38,32 +38,6 @@ const PAGE_SIZE = 10;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE_MB = 5;
 
-const mergeImagePaths = (
-  existing: string[],
-  additions: string[],
-  formType: FormMode
-): { next: string[]; added: string[] } => {
-  const uniqueAdditions = additions.filter(
-    (path) => path && !existing.includes(path)
-  );
-
-  if (uniqueAdditions.length === 0) {
-    return { next: existing, added: [] };
-  }
-
-  if (formType === "edit") {
-    return {
-      next: [...uniqueAdditions, ...existing],
-      added: uniqueAdditions,
-    };
-  }
-
-  return {
-    next: [...existing, ...uniqueAdditions],
-    added: uniqueAdditions,
-  };
-};
-
 const defaultProductForm: ProductRequest = {
   name: "",
   description: "",
@@ -280,6 +254,12 @@ const ProductsManagementPage: React.FC = () => {
 
   const openEditModal = (product: Product) => {
     setSelectedProduct(product);
+    const images =
+      product.imageUrls && product.imageUrls.length > 0
+        ? product.imageUrls
+        : product.imageUrl
+          ? [product.imageUrl]
+          : [];
     setEditForm({
       name: product.name,
       description: product.description,
@@ -288,17 +268,11 @@ const ProductsManagementPage: React.FC = () => {
       stockQuantity: product.stockQuantity,
       sku: product.sku,
       categoryId: product.categoryId,
-      imageUrl: product.imageUrl,
-      imageUrls: product.imageUrls || [],
+      imageUrl: images[0] || "",
+      imageUrls: images.length > 0 ? [images[0]] : [],
       status: product.status,
     });
-    const images =
-      product.imageUrls && product.imageUrls.length > 0
-        ? product.imageUrls
-        : product.imageUrl
-          ? [product.imageUrl]
-          : [];
-    setEditImages(images);
+    setEditImages(images.length > 0 ? [images[0]] : []);
     setIsEditModalOpen(true);
   };
 
@@ -443,7 +417,9 @@ const ProductsManagementPage: React.FC = () => {
       }
 
       const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
+      Array.from(files)
+        .slice(0, 1)
+        .forEach((file) => formData.append("files", file));
 
       const setUploading =
         formType === "create" ? setIsCreateUploading : setIsEditUploading;
@@ -466,34 +442,27 @@ const ProductsManagementPage: React.FC = () => {
           );
         }
 
-        const sanitizePaths = result.paths.filter((path) => !!path);
-
-        const { next: mergedImages, added } = mergeImagePaths(
-          formType === "create" ? createImages : editImages,
-          sanitizePaths,
-          formType
-        );
-
-        if (added.length === 0) {
-          showToast("Những ảnh này đã tồn tại trong danh sách.", "info");
+        const primaryPath = result.paths.find((path) => !!path);
+        if (!primaryPath) {
+          showToast("Không tìm thấy ảnh hợp lệ từ máy của bạn.", "warning");
           return;
         }
 
         if (formType === "create") {
-          setCreateImages(mergedImages);
+          setCreateImages([primaryPath]);
           setCreateForm((form) => ({
             ...form,
-            imageUrl: mergedImages[0] || "",
-            imageUrls: mergedImages,
+            imageUrl: primaryPath,
+            imageUrls: [primaryPath],
           }));
         } else {
-          setEditImages(mergedImages);
+          setEditImages([primaryPath]);
           setEditForm((form) =>
             form
               ? {
                   ...form,
-                  imageUrl: mergedImages[0] || "",
-                  imageUrls: mergedImages,
+                  imageUrl: primaryPath,
+                  imageUrls: [primaryPath],
                 }
               : form
           );
@@ -512,7 +481,7 @@ const ProductsManagementPage: React.FC = () => {
         setUploading(false);
       }
     },
-    [createImages, editImages, resolveErrorMessage, showToast]
+    [resolveErrorMessage, showToast]
   );
 
   const handleImageInputChange = async (
@@ -1333,7 +1302,6 @@ const ProductsManagementPage: React.FC = () => {
               ref={createFileInputRef}
               type="file"
               accept="image/*"
-              multiple
               className="hidden"
               onChange={(event) => handleImageInputChange(event, "create")}
             />
@@ -1499,7 +1467,6 @@ const ProductsManagementPage: React.FC = () => {
                 ref={editFileInputRef}
                 type="file"
                 accept="image/*"
-                multiple
                 className="hidden"
                 onChange={(event) => handleImageInputChange(event, "edit")}
               />
