@@ -2,6 +2,7 @@ package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.ProductDTO;
 import com.ecommerce.backend.dto.ProductRequestDTO;
+import com.ecommerce.backend.exception.InvalidRequestException;
 import com.ecommerce.backend.exception.ResourceAlreadyExistsException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.model.Category;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -32,6 +34,30 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private static final int LOW_STOCK_THRESHOLD = 5;
+    private static final int MINIMUM_PRODUCT_IMAGES = 5;
+
+    private List<String> sanitizeImageUrls(List<String> imageUrls) {
+        if (imageUrls == null) {
+            return Collections.emptyList();
+        }
+
+        return imageUrls.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(url -> !url.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private List<String> validateAndPrepareImageUrls(List<String> imageUrls) {
+        List<String> sanitized = sanitizeImageUrls(imageUrls);
+        if (sanitized.size() < MINIMUM_PRODUCT_IMAGES) {
+            throw new InvalidRequestException(
+                    String.format("Mỗi sản phẩm cần tối thiểu %d hình ảnh hợp lệ.", MINIMUM_PRODUCT_IMAGES)
+            );
+        }
+        return sanitized;
+    }
     
     @Transactional(readOnly = true)
     public Page<ProductDTO> getAllProducts(Pageable pageable) {
@@ -131,6 +157,15 @@ public class ProductService {
         // Get category
         Category category = categoryRepository.findById(productRequestDTO.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", productRequestDTO.getCategoryId()));
+
+        List<String> preparedImageUrls = validateAndPrepareImageUrls(productRequestDTO.getImageUrls());
+        productRequestDTO.setImageUrls(preparedImageUrls);
+
+        String mainImageUrl = productRequestDTO.getImageUrl();
+        if (mainImageUrl == null || mainImageUrl.trim().isEmpty()) {
+            mainImageUrl = preparedImageUrls.get(0);
+        }
+        productRequestDTO.setImageUrl(mainImageUrl.trim());
         
         // Create product
         Product product = new Product();
@@ -141,12 +176,6 @@ public class ProductService {
         product.setStockQuantity(productRequestDTO.getStockQuantity());
         product.setSku(productRequestDTO.getSku());
         product.setCategory(category);
-        if (Objects.isNull(productRequestDTO.getImageUrl()) &&
-                productRequestDTO.getImageUrls() != null &&
-                !productRequestDTO.getImageUrls().isEmpty()) {
-            productRequestDTO.setImageUrl(productRequestDTO.getImageUrls().get(0));
-        }
-
         product.setImageUrl(productRequestDTO.getImageUrl());
         product.setStatus(productRequestDTO.getStatus() != null ? productRequestDTO.getStatus() : product.getStatus());
         product.setRating(BigDecimal.ZERO);
@@ -155,7 +184,7 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
         
         // Add product images
-        if (productRequestDTO.getImageUrls() != null && !productRequestDTO.getImageUrls().isEmpty()) {
+        if (!productRequestDTO.getImageUrls().isEmpty()) {
             for (int i = 0; i < productRequestDTO.getImageUrls().size(); i++) {
                 ProductImage image = new ProductImage();
                 image.setProduct(savedProduct);
@@ -189,23 +218,43 @@ public class ProductService {
             product.setCategory(category);
         }
         
+        boolean shouldReplaceImages = productRequestDTO.getImageUrls() != null;
+        List<String> preparedImageUrls;
+        if (shouldReplaceImages) {
+            preparedImageUrls = validateAndPrepareImageUrls(productRequestDTO.getImageUrls());
+        } else {
+            preparedImageUrls = sanitizeImageUrls(
+                    productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId())
+                            .stream()
+                            .map(ProductImage::getImageUrl)
+                            .collect(Collectors.toList())
+            );
+            if (preparedImageUrls.size() < MINIMUM_PRODUCT_IMAGES) {
+                throw new InvalidRequestException(
+                        String.format("Mỗi sản phẩm cần tối thiểu %d hình ảnh hợp lệ.", MINIMUM_PRODUCT_IMAGES)
+                );
+            }
+        }
+        productRequestDTO.setImageUrls(preparedImageUrls);
+
+        String mainImageUrl = productRequestDTO.getImageUrl();
+        if (mainImageUrl == null || mainImageUrl.trim().isEmpty()) {
+            mainImageUrl = preparedImageUrls.get(0);
+        }
+        productRequestDTO.setImageUrl(mainImageUrl.trim());
+
         product.setName(productRequestDTO.getName());
         product.setDescription(productRequestDTO.getDescription());
         product.setPrice(productRequestDTO.getPrice());
         product.setDiscountPrice(productRequestDTO.getDiscountPrice());
         product.setStockQuantity(productRequestDTO.getStockQuantity());
         product.setSku(productRequestDTO.getSku());
-        if (Objects.isNull(productRequestDTO.getImageUrl()) &&
-                productRequestDTO.getImageUrls() != null &&
-                !productRequestDTO.getImageUrls().isEmpty()) {
-            productRequestDTO.setImageUrl(productRequestDTO.getImageUrls().get(0));
-        }
         product.setImageUrl(productRequestDTO.getImageUrl());
         product.setStatus(productRequestDTO.getStatus() != null ? productRequestDTO.getStatus() : product.getStatus());
         
         Product updatedProduct = productRepository.save(product);
 
-        if (productRequestDTO.getImageUrls() != null) {
+        if (shouldReplaceImages) {
             productImageRepository.deleteByProductId(updatedProduct.getId());
             for (int i = 0; i < productRequestDTO.getImageUrls().size(); i++) {
                 ProductImage image = new ProductImage();

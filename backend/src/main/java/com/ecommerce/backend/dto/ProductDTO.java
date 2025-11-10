@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,6 +53,10 @@ public class ProductDTO {
         
         if (product.getImages() != null && !product.getImages().isEmpty()) {
             this.imageUrls = product.getImages().stream()
+                    .sorted(Comparator.comparing(
+                            img -> img.getDisplayOrder(),
+                            Comparator.nullsLast(Integer::compareTo)
+                    ))
                     .map(img -> img.getImageUrl())
                     .collect(Collectors.toList());
         }

@@ -28,6 +28,7 @@ import {
   FaFilter,
   FaLayerGroup,
   FaPlus,
+  FaStar,
   FaTags,
   FaTimes,
   FaUpload,
@@ -37,6 +38,7 @@ const STOCK_WARNING_THRESHOLD = 5;
 const PAGE_SIZE = 10;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE_MB = 5;
+const MINIMUM_PRODUCT_IMAGES = 5;
 
 const defaultProductForm: ProductRequest = {
   name: "",
@@ -269,10 +271,16 @@ const ProductsManagementPage: React.FC = () => {
       sku: product.sku,
       categoryId: product.categoryId,
       imageUrl: images[0] || "",
-      imageUrls: images.length > 0 ? [images[0]] : [],
+      imageUrls: images,
       status: product.status,
     });
-    setEditImages(images.length > 0 ? [images[0]] : []);
+    setEditImages(images);
+    if (images.length < MINIMUM_PRODUCT_IMAGES) {
+      showToast(
+        `Sản phẩm hiện có ${images.length}/${MINIMUM_PRODUCT_IMAGES} ảnh. Vui lòng bổ sung thêm trước khi lưu.`,
+        "warning"
+      );
+    }
     setIsEditModalOpen(true);
   };
 
@@ -388,6 +396,41 @@ const ProductsManagementPage: React.FC = () => {
     }
   };
 
+  const updateImagesState = (
+    formType: FormMode,
+    compute: (previous: string[]) => string[]
+  ): string[] => {
+    let nextState: string[] = [];
+    if (formType === "create") {
+      setCreateImages((prev) => {
+        const updated = compute(prev);
+        nextState = updated;
+        setCreateForm((form) => ({
+          ...form,
+          imageUrl: updated[0] || "",
+          imageUrls: updated,
+        }));
+        return updated;
+      });
+    } else if (formType === "edit") {
+      setEditImages((prev) => {
+        const updated = compute(prev);
+        nextState = updated;
+        setEditForm((form) =>
+          form
+            ? {
+                ...form,
+                imageUrl: updated[0] || "",
+                imageUrls: updated,
+              }
+            : form
+        );
+        return updated;
+      });
+    }
+    return nextState;
+  };
+
   const uploadImagesFromFiles = useCallback(
     async (files: File[], formType: FormMode) => {
       if (files.length === 0) {
@@ -417,9 +460,7 @@ const ProductsManagementPage: React.FC = () => {
       }
 
       const formData = new FormData();
-      Array.from(files)
-        .slice(0, 1)
-        .forEach((file) => formData.append("files", file));
+      Array.from(files).forEach((file) => formData.append("files", file));
 
       const setUploading =
         formType === "create" ? setIsCreateUploading : setIsEditUploading;
@@ -442,33 +483,34 @@ const ProductsManagementPage: React.FC = () => {
           );
         }
 
-        const primaryPath = result.paths.find((path) => !!path);
-        if (!primaryPath) {
+        const newPaths = result.paths.filter(
+          (path): path is string =>
+            typeof path === "string" && path.trim().length > 0
+        );
+
+        if (newPaths.length === 0) {
           showToast("Không tìm thấy ảnh hợp lệ từ máy của bạn.", "warning");
           return;
         }
 
-        if (formType === "create") {
-          setCreateImages([primaryPath]);
-          setCreateForm((form) => ({
-            ...form,
-            imageUrl: primaryPath,
-            imageUrls: [primaryPath],
-          }));
-        } else {
-          setEditImages([primaryPath]);
-          setEditForm((form) =>
-            form
-              ? {
-                  ...form,
-                  imageUrl: primaryPath,
-                  imageUrls: [primaryPath],
-                }
-              : form
-          );
-        }
+        const merged = updateImagesState(formType, (prev) => {
+          const existing = [...prev];
+          newPaths.forEach((path) => {
+            if (!existing.includes(path)) {
+              existing.push(path);
+            }
+          });
+          return existing;
+        });
 
-        showToast("Đã tải ảnh lên thành công!", "success");
+        if (merged.length < MINIMUM_PRODUCT_IMAGES) {
+          showToast(
+            `Đã thêm ${newPaths.length} ảnh. Hiện có ${merged.length}/${MINIMUM_PRODUCT_IMAGES} ảnh cần thiết.`,
+            "info"
+          );
+        } else {
+          showToast(`Đã thêm ${newPaths.length} ảnh thành công!`, "success");
+        }
       } catch (error) {
         showToast(
           resolveErrorMessage(
@@ -498,31 +540,37 @@ const ProductsManagementPage: React.FC = () => {
   };
 
   const handleRemoveImage = (index: number, formType: FormMode) => {
-    if (formType === "create") {
-      setCreateImages((prev) => {
-        const updated = prev.filter((_, i) => i !== index);
-        setCreateForm((form) => ({
-          ...form,
-          imageUrl: updated[0] || "",
-          imageUrls: updated,
-        }));
-        return updated;
-      });
-    } else if (formType === "edit") {
-      setEditImages((prev) => {
-        const updated = prev.filter((_, i) => i !== index);
-        setEditForm((form) =>
-          form
-            ? {
-                ...form,
-                imageUrl: updated[0] || "",
-                imageUrls: updated,
-              }
-            : form
-        );
-        return updated;
-      });
+    const updated = updateImagesState(formType, (prev) =>
+      prev.filter((_, i) => i !== index)
+    );
+    if (updated.length === 0) {
+      showToast(
+        `Bạn đã xóa toàn bộ ảnh. Vui lòng tải ít nhất ${MINIMUM_PRODUCT_IMAGES} ảnh trước khi lưu.`,
+        "warning"
+      );
+    } else if (updated.length < MINIMUM_PRODUCT_IMAGES) {
+      showToast(
+        `Hiện có ${updated.length}/${MINIMUM_PRODUCT_IMAGES} ảnh. Đảm bảo đủ số lượng trước khi lưu.`,
+        "warning"
+      );
     }
+  };
+
+  const handleSetPrimaryImage = (index: number, formType: FormMode) => {
+    if (index === 0) {
+      showToast("Ảnh này đã là ảnh chính.", "info");
+      return;
+    }
+    updateImagesState(formType, (prev) => {
+      if (index < 0 || index >= prev.length) {
+        return prev;
+      }
+      const reordered = [...prev];
+      const [selected] = reordered.splice(index, 1);
+      reordered.unshift(selected);
+      return reordered;
+    });
+    showToast("Đã đặt lại ảnh chính cho sản phẩm.", "success");
   };
 
   const validateForm = (form: ProductRequest): boolean => {
@@ -546,6 +594,15 @@ const ProductsManagementPage: React.FC = () => {
       return false;
     }
 
+    const imageCount = form.imageUrls ? form.imageUrls.length : 0;
+    if (imageCount < MINIMUM_PRODUCT_IMAGES) {
+      showToast(
+        `Vui lòng chọn tối thiểu ${MINIMUM_PRODUCT_IMAGES} ảnh cho sản phẩm (hiện có ${imageCount}).`,
+        "error"
+      );
+      return false;
+    }
+
     return true;
   };
 
@@ -564,10 +621,13 @@ const ProductsManagementPage: React.FC = () => {
 
     setIsSaving(true);
     try {
+      const images = (createForm.imageUrls ?? []).filter(
+        (url): url is string => typeof url === "string" && url.length > 0
+      );
       const payload: ProductRequest = {
         ...createForm,
-        imageUrl: createImages[0] || createForm.imageUrl,
-        imageUrls: createImages,
+        imageUrl: images[0] || createForm.imageUrl || "",
+        imageUrls: images,
       };
 
       await productsApi.create(payload);
@@ -604,10 +664,13 @@ const ProductsManagementPage: React.FC = () => {
 
     setIsSaving(true);
     try {
+      const images = (editForm.imageUrls ?? []).filter(
+        (url): url is string => typeof url === "string" && url.length > 0
+      );
       const payload: ProductRequest = {
         ...editForm,
-        imageUrl: editImages[0] || editForm.imageUrl,
-        imageUrls: editImages,
+        imageUrl: images[0] || editForm.imageUrl || "",
+        imageUrls: images,
       };
       await productsApi.update(selectedProduct.id, payload);
       showToast("Cập nhật sản phẩm thành công!", "success");
@@ -671,6 +734,10 @@ const ProductsManagementPage: React.FC = () => {
 
     return (
       <>
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span>Đã chọn {images.length} ảnh</span>
+          <span>Tối thiểu {MINIMUM_PRODUCT_IMAGES} ảnh</span>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {images.map((url, index) => (
             <div
@@ -685,6 +752,23 @@ const ProductsManagementPage: React.FC = () => {
                 className="h-32 w-full object-cover"
                 unoptimized
               />
+              <div className="absolute top-2 left-2">
+                {index === 0 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-600/85 px-2 py-1 text-xs font-semibold text-white shadow-sm">
+                    <FaStar className="w-3 h-3" />
+                    Ảnh chính
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrimaryImage(index, formType)}
+                    className="inline-flex items-center gap-1 rounded-full bg-gray-900/80 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-600/85"
+                  >
+                    <FaStar className="w-3 h-3" />
+                    Đặt ảnh chính
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => handleRemoveImage(index, formType)}
@@ -1302,6 +1386,7 @@ const ProductsManagementPage: React.FC = () => {
               ref={createFileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={(event) => handleImageInputChange(event, "create")}
             />
@@ -1317,11 +1402,13 @@ const ProductsManagementPage: React.FC = () => {
               </Button>
               <p className="text-xs text-gray-400 sm:pt-0 sm:mb-0">
                 Hỗ trợ JPG, PNG, WEBP (tối đa {MAX_IMAGE_SIZE_MB}MB mỗi ảnh).
+                Vui lòng chọn tối thiểu {MINIMUM_PRODUCT_IMAGES} ảnh.
               </p>
             </div>
             <p className="text-xs text-gray-400">
               Ảnh sẽ được lưu vào thư mục tĩnh `/assets/images/products`. Ảnh
-              đầu tiên trong danh sách sẽ được dùng làm ảnh đại diện.
+              đầu tiên trong danh sách là ảnh đại diện, bạn có thể dùng nút "Đặt
+              ảnh chính" để thay đổi.
             </p>
             {renderImagesPreview(createImages, "create", isCreateUploading)}
           </div>
@@ -1467,6 +1554,7 @@ const ProductsManagementPage: React.FC = () => {
                 ref={editFileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={(event) => handleImageInputChange(event, "edit")}
               />
@@ -1482,11 +1570,13 @@ const ProductsManagementPage: React.FC = () => {
                 </Button>
                 <p className="text-xs text-gray-400 sm:pt-0 sm:mb-0">
                   Hỗ trợ JPG, PNG, WEBP (tối đa {MAX_IMAGE_SIZE_MB}MB mỗi ảnh).
+                  Vui lòng duy trì tối thiểu {MINIMUM_PRODUCT_IMAGES} ảnh.
                 </p>
               </div>
               <p className="text-xs text-gray-400">
                 Ảnh mới sẽ được lưu cục bộ và thêm vào danh sách hiện tại. Ảnh
-                đầu tiên trong danh sách được dùng làm ảnh chính.
+                đầu tiên là ảnh chính, bạn có thể nhấn "Đặt ảnh chính" để cập
+                nhật.
               </p>
               {renderImagesPreview(editImages, "edit", isEditUploading)}
             </div>
