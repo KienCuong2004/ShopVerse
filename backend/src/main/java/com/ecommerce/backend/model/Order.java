@@ -56,6 +56,9 @@ public class Order {
     
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "admin_notes", columnDefinition = "TEXT")
+    private String adminNotes;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;

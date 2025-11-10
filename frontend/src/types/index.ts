@@ -1,36 +1,36 @@
 // Enums
 export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
+  USER = "USER",
+  ADMIN = "ADMIN",
 }
 
 export enum ProductStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  OUT_OF_STOCK = 'OUT_OF_STOCK',
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  OUT_OF_STOCK = "OUT_OF_STOCK",
 }
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  PROCESSING = "PROCESSING",
+  SHIPPED = "SHIPPED",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
 }
 
 export enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
+  PENDING = "PENDING",
+  PAID = "PAID",
+  FAILED = "FAILED",
+  REFUNDED = "REFUNDED",
 }
 
 export enum ReviewStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
 }
 
 // User Types
@@ -161,6 +161,7 @@ export interface Order {
   paymentMethod?: string;
   paymentStatus?: PaymentStatus;
   notes?: string;
+  adminNotes?: string;
   orderItems: OrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -173,6 +174,21 @@ export interface OrderRequest {
   paymentMethod?: string;
   notes?: string;
   cartItemIds: string[];
+}
+
+export interface UpdateOrderPayload {
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  adminNotes?: string;
+}
+
+export interface OrderSummary {
+  totalOrders: number;
+  pendingOrders: number;
+  shippingOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+  totalRevenue: number;
 }
 
 // Review Types
@@ -214,4 +230,3 @@ export interface PaginatedResponse<T> {
   first: boolean;
   last: boolean;
 }
-

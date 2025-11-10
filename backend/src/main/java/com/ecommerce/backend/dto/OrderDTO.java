@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,7 +29,8 @@ public class OrderDTO {
     private String paymentMethod;
     private Order.PaymentStatus paymentStatus;
     private String notes;
-    private List<OrderItemDTO> orderItems;
+    private String adminNotes;
+    private List<OrderItemDTO> orderItems = Collections.emptyList();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -50,11 +52,14 @@ public class OrderDTO {
         this.paymentMethod = order.getPaymentMethod();
         this.paymentStatus = order.getPaymentStatus();
         this.notes = order.getNotes();
+        this.adminNotes = order.getAdminNotes();
         
         if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
             this.orderItems = order.getOrderItems().stream()
                     .map(OrderItemDTO::new)
                     .collect(Collectors.toList());
+        } else {
+            this.orderItems = Collections.emptyList();
         }
         
         this.createdAt = order.getCreatedAt();

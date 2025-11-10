@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method VARCHAR(50),
     payment_status VARCHAR(20) DEFAULT 'PENDING' CHECK (payment_status IN ('PENDING', 'PAID', 'FAILED', 'REFUNDED')),
     notes TEXT,
+    admin_notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -197,16 +198,16 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
 -- All passwords are BCrypt hashed for "123456"
 -- BCrypt hash: $2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm
 INSERT INTO users (username, email, password, full_name, phone, address, role) VALUES
-('admin', 'admin@shopverse.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Administrator', '0123456789', '123 Admin Street, City', 'ADMIN'),
-('john_doe', 'john.doe@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'John Doe', '0987654321', '456 Main Street, District 1', 'USER'),
-('jane_smith', 'jane.smith@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Jane Smith', '0912345678', '789 Oak Avenue, District 3', 'USER'),
-('mike_wilson', 'mike.wilson@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Mike Wilson', '0923456789', '321 Pine Road, District 5', 'USER'),
-('sarah_jones', 'sarah.jones@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Sarah Jones', '0934567890', '654 Elm Street, District 7', 'USER'),
-('disabled_user', 'disabled.user@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Disabled User', '0945678901', '876 Fifth Avenue, District 9', 'USER'),
-('admin_disabled', 'admin.disabled@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Admin Disabled', '0956789012', '987 Sixth Avenue, District 11', 'ADMIN'),
-('user_disabled', 'user.disabled@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'User Disabled', '0967890123', '109 Eighth Avenue, District 13', 'USER'),
-('admin_disabled_user', 'admin.disabled.user@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Admin Disabled User', '0978901234', '120 Tenth Avenue, District 15', 'ADMIN'),
-('user_disabled_admin', 'user.disabled.admin@example.com', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'User Disabled Admin', '0989012345', '131 Twelfth Avenue, District 17', 'USER')
+('admin', 'admin@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Quản trị viên ShopVerse', '0981000000', 'Tầng 10, 123 Phố Huế, Hai Bà Trưng, Hà Nội', 'ADMIN'),
+('nguyen_van_anh', 'nguyenvananh@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Nguyễn Văn Anh', '0987654321', 'Số 12 Nguyễn Chí Thanh, Đống Đa, Hà Nội', 'USER'),
+('tran_thi_lan', 'tranthilan@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Trần Thị Lan', '0912345678', 'Số 45 Lạc Long Quân, Tây Hồ, Hà Nội', 'USER'),
+('pham_duc_minh', 'phamducminh@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Phạm Đức Minh', '0905123456', 'Số 88 Kim Mã, Ba Đình, Hà Nội', 'USER'),
+('le_thu_hien', 'lethuhien@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Lê Thu Hiền', '0932123456', 'Số 27 Trần Hưng Đạo, Hoàn Kiếm, Hà Nội', 'USER'),
+('do_viet_binh', 'dovietbinh@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Đỗ Việt Bình', '0973456789', 'Số 60 Nguyễn Trãi, Thanh Xuân, Hà Nội', 'USER'),
+('admin_tam_nghi', 'admin.tamnghi@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Admin Tạm Nghỉ', '0964567890', 'Số 18 Lê Văn Lương, Thanh Xuân, Hà Nội', 'ADMIN'),
+('pham_thu_ha', 'phamthuha@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Phạm Thu Hà', '0945678901', 'Số 210 Đội Cấn, Ba Đình, Hà Nội', 'USER'),
+('nguyen_thanh_trung', 'nguyenthanhtrung@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Nguyễn Thành Trung', '0856789012', 'Số 75 Cầu Giấy, Cầu Giấy, Hà Nội', 'ADMIN'),
+('tran_minh_quan', 'tranminhquan@shopverse.vn', '$2a$10$yRqAvl.XyhIsEb5vQK3hBOJ20qRBY0Buh6sFJ62iRNuF0xLrPeJLm', 'Trần Minh Quân', '0837890123', 'Số 32 Giải Phóng, Hai Bà Trưng, Hà Nội', 'USER')
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert Categories
@@ -376,51 +377,75 @@ ON CONFLICT DO NOTHING;
 
 -- Insert Cart Items
 INSERT INTO cart_items (user_id, product_id, quantity) VALUES
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), (SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), 1),
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 2),
-((SELECT id FROM users WHERE username = 'jane_smith' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), 1),
-((SELECT id FROM users WHERE username = 'jane_smith' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), 3),
-((SELECT id FROM users WHERE username = 'mike_wilson' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), 1)
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), (SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 2),
+((SELECT id FROM users WHERE username = 'tran_thi_lan' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'tran_thi_lan' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), 3),
+((SELECT id FROM users WHERE username = 'pham_duc_minh' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'do_viet_binh' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), 2),
+((SELECT id FROM users WHERE username = 'do_viet_binh' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'pham_thu_ha' LIMIT 1), (SELECT id FROM products WHERE name = 'Sony WH-1000XM5' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'nguyen_thanh_trung' LIMIT 1), (SELECT id FROM products WHERE name = 'Samsung Galaxy S24 Ultra' LIMIT 1), 1),
+((SELECT id FROM users WHERE username = 'tran_minh_quan' LIMIT 1), (SELECT id FROM products WHERE name = 'Classic White T-Shirt' LIMIT 1), 2),
+((SELECT id FROM users WHERE username = 'pham_thu_ha' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 1)
 ON CONFLICT (user_id, product_id) DO NOTHING;
 
 -- Insert Orders
-INSERT INTO orders (user_id, order_number, total_amount, shipping_address, shipping_phone, shipping_name, status, payment_method, payment_status, notes) VALUES
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), 'ORD-2025-001', 149.98, '456 Main Street, District 1', '0987654321', 'John Doe', 'DELIVERED', 'CREDIT_CARD', 'PAID', 'Please deliver before 5 PM'),
-((SELECT id FROM users WHERE username = 'jane_smith' LIMIT 1), 'ORD-2025-002', 79.98, '789 Oak Avenue, District 3', '0912345678', 'Jane Smith', 'SHIPPED', 'PAYPAL', 'PAID', NULL),
-((SELECT id FROM users WHERE username = 'mike_wilson' LIMIT 1), 'ORD-2025-003', 2499.99, '321 Pine Road, District 5', '0923456789', 'Mike Wilson', 'PROCESSING', 'CREDIT_CARD', 'PAID', NULL),
-((SELECT id FROM users WHERE username = 'sarah_jones' LIMIT 1), 'ORD-2025-004', 124.97, '654 Elm Street, District 7', '0934567890', 'Sarah Jones', 'CONFIRMED', 'BANK_TRANSFER', 'PENDING', 'Will pay after confirmation'),
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), 'ORD-2025-005', 49.99, '456 Main Street, District 1', '0987654321', 'John Doe', 'PENDING', 'CREDIT_CARD', 'PENDING', NULL)
+INSERT INTO orders (user_id, order_number, total_amount, shipping_address, shipping_phone, shipping_name, status, payment_method, payment_status, notes, admin_notes) VALUES
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), 'ORD-2025-001', 6289000, 'Số 12 Nguyễn Chí Thanh, Đống Đa, Hà Nội', '0987654321', 'Nguyễn Văn Anh', 'DELIVERED', 'CREDIT_CARD', 'PAID', 'Vui lòng giao trước 17h', 'Đơn hàng đã giao thành công'),
+((SELECT id FROM users WHERE username = 'tran_thi_lan' LIMIT 1), 'ORD-2025-002', 2196000, 'Số 45 Lạc Long Quân, Tây Hồ, Hà Nội', '0912345678', 'Trần Thị Lan', 'SHIPPED', 'PAYPAL', 'PAID', NULL, 'Đang vận chuyển bởi GHN'),
+((SELECT id FROM users WHERE username = 'pham_duc_minh' LIMIT 1), 'ORD-2025-003', 69990000, 'Số 88 Kim Mã, Ba Đình, Hà Nội', '0905123456', 'Phạm Đức Minh', 'PROCESSING', 'CREDIT_CARD', 'PAID', NULL, 'Chuẩn bị đóng gói'),
+((SELECT id FROM users WHERE username = 'le_thu_hien' LIMIT 1), 'ORD-2025-004', 1657000, 'Số 27 Trần Hưng Đạo, Hoàn Kiếm, Hà Nội', '0932123456', 'Lê Thu Hiền', 'CONFIRMED', 'BANK_TRANSFER', 'PENDING', 'Sẽ thanh toán sau khi xác nhận', 'Khách hẹn chuyển khoản sau'),
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), 'ORD-2025-005', 1598000, 'Số 12 Nguyễn Chí Thanh, Đống Đa, Hà Nội', '0987654321', 'Nguyễn Văn Anh', 'PENDING', 'CREDIT_CARD', 'PENDING', NULL, 'Khách đang cân nhắc sản phẩm'),
+((SELECT id FROM users WHERE username = 'do_viet_binh' LIMIT 1), 'ORD-2025-006', 1428000, 'Số 60 Nguyễn Trãi, Thanh Xuân, Hà Nội', '0973456789', 'Đỗ Việt Bình', 'DELIVERED', 'MOMO', 'PAID', 'Đã thanh toán trước', 'Giao thành công sáng nay'),
+((SELECT id FROM users WHERE username = 'pham_thu_ha' LIMIT 1), 'ORD-2025-007', 3990000, 'Số 210 Đội Cấn, Ba Đình, Hà Nội', '0945678901', 'Phạm Thu Hà', 'CANCELLED', 'CREDIT_CARD', 'REFUNDED', 'Khách yêu cầu hủy đơn', 'Đã hoàn tiền cho khách'),
+((SELECT id FROM users WHERE username = 'nguyen_thanh_trung' LIMIT 1), 'ORD-2025-008', 7990000, 'Số 75 Cầu Giấy, Cầu Giấy, Hà Nội', '0856789012', 'Nguyễn Thành Trung', 'DELIVERED', 'CREDIT_CARD', 'PAID', 'Đơn ưu tiên giao nhanh', 'Khách đánh giá rất hài lòng'),
+((SELECT id FROM users WHERE username = 'tran_minh_quan' LIMIT 1), 'ORD-2025-009', 1099000, 'Số 32 Giải Phóng, Hai Bà Trưng, Hà Nội', '0837890123', 'Trần Minh Quân', 'SHIPPED', 'BANK_TRANSFER', 'PENDING', 'Đã đóng gói, chờ thanh toán', 'Đã nhắc khách thanh toán'),
+((SELECT id FROM users WHERE username = 'pham_thu_ha' LIMIT 1), 'ORD-2025-010', 5490000, 'Số 210 Đội Cấn, Ba Đình, Hà Nội', '0945678901', 'Phạm Thu Hà', 'PROCESSING', 'PAYPAL', 'PAID', 'Đơn hàng đặt thêm phụ kiện', 'Chuẩn bị kiểm tra chất lượng')
 ON CONFLICT (order_number) DO NOTHING;
 
 -- Insert Order Items
 INSERT INTO order_items (order_id, product_id, product_name, product_price, quantity, subtotal) VALUES
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 'AirPods Pro 2', 199.99, 1, 199.99),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), (SELECT id FROM products WHERE name = 'Running Shoes' LIMIT 1), 'Running Shoes', 79.99, 1, 79.99),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), 'Summer Dress', 49.99, 1, 49.99),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), 'Ceramic Plant Pot', 19.99, 1, 19.99),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), 'MacBook Pro 16"', 2499.99, 1, 2499.99),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), 'Chess Set', 34.99, 2, 69.98),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), 'Yoga Mat', 29.99, 1, 29.99);
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 'AirPods Pro 2', 4990000, 1, 4990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), (SELECT id FROM products WHERE name = 'Running Shoes' LIMIT 1), 'Running Shoes', 1299000, 1, 1299000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), 'Summer Dress', 999000, 1, 999000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), 'Ceramic Plant Pot', 399000, 3, 1197000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), 'MacBook Pro 16"', 69990000, 1, 69990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), 'Chess Set', 629000, 2, 1258000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), 'Yoga Mat', 399000, 1, 399000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-006' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), 'Chess Set', 629000, 2, 1258000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-006' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), 'Yoga Mat', 399000, 1, 399000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-007' LIMIT 1), (SELECT id FROM products WHERE name = 'Sony WH-1000XM5' LIMIT 1), 'Sony WH-1000XM5', 7990000, 1, 7990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-008' LIMIT 1), (SELECT id FROM products WHERE name = 'Samsung Galaxy S24 Ultra' LIMIT 1), 'Samsung Galaxy S24 Ultra', 23990000, 1, 23990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-008' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 'AirPods Pro 2', 4990000, 1, 4990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-009' LIMIT 1), (SELECT id FROM products WHERE name = 'Classic White T-Shirt' LIMIT 1), 'Classic White T-Shirt', 299000, 2, 598000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-010' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), 'AirPods Pro 2', 4990000, 1, 4990000),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-010' LIMIT 1), (SELECT id FROM products WHERE name = 'LED Desk Lamp' LIMIT 1), 'LED Desk Lamp', 599000, 1, 599000);
 
 -- Insert Reviews
 INSERT INTO reviews (user_id, product_id, order_id, rating, comment, status) VALUES
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 5, 'Amazing sound quality and noise cancellation!', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'jane_smith' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 4, 'Beautiful dress, perfect for summer. Fits well.', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'mike_wilson' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), 5, 'Powerful machine, handles everything I throw at it. Highly recommend!', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'sarah_jones' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 4, 'Good quality pieces, board is nice. Great value for money.', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'john_doe' LIMIT 1), (SELECT id FROM products WHERE name = 'Running Shoes' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 4, 'Comfortable and lightweight. Good for daily runs.', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'jane_smith' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 5, 'Love these pots! They look great with my plants.', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'mike_wilson' LIMIT 1), (SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), NULL, 5, 'Best phone I''ve ever owned. Camera is incredible!', 'APPROVED'),
-((SELECT id FROM users WHERE username = 'sarah_jones' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 4, 'Good mat, comfortable. Could be thicker but works well.', 'APPROVED')
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), (SELECT id FROM products WHERE name = 'AirPods Pro 2' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 5, 'Âm thanh tuyệt vời và chống ồn rất tốt!', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'tran_thi_lan' LIMIT 1), (SELECT id FROM products WHERE name = 'Summer Dress' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 4, 'Váy đẹp, mặc mát và vừa vặn với mình.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'pham_duc_minh' LIMIT 1), (SELECT id FROM products WHERE name = 'MacBook Pro 16"' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), 5, 'Hiệu năng rất mạnh, xử lý công việc mượt mà.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'le_thu_hien' LIMIT 1), (SELECT id FROM products WHERE name = 'Chess Set' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 4, 'Bộ cờ đẹp, gỗ chắc chắn. Rất đáng mua.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'nguyen_van_anh' LIMIT 1), (SELECT id FROM products WHERE name = 'Running Shoes' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 4, 'Giày nhẹ, chạy êm chân, phù hợp tập luyện hằng ngày.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'tran_thi_lan' LIMIT 1), (SELECT id FROM products WHERE name = 'Ceramic Plant Pot' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 5, 'Chậu sứ rất đẹp, phù hợp với không gian phòng khách.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'pham_duc_minh' LIMIT 1), (SELECT id FROM products WHERE name = 'iPhone 15 Pro' LIMIT 1), NULL, 5, 'Camera quá đẹp, hiệu năng mượt, pin đủ dùng cả ngày.', 'APPROVED'),
+((SELECT id FROM users WHERE username = 'le_thu_hien' LIMIT 1), (SELECT id FROM products WHERE name = 'Yoga Mat' LIMIT 1), (SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 4, 'Thảm tập êm, bám tốt. Giá hợp lý.', 'APPROVED')
 ON CONFLICT (user_id, product_id, order_id) DO NOTHING;
 
 -- Insert Payments
 INSERT INTO payments (order_id, payment_method, transaction_id, amount, status, payment_date) VALUES
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-001', 149.98, 'SUCCESS', '2025-01-10 10:30:00'),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 'PAYPAL', 'PP-2025-002', 79.98, 'SUCCESS', '2025-01-10 14:20:00'),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-003', 2499.99, 'SUCCESS', '2025-01-11 09:15:00'),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 'BANK_TRANSFER', NULL, 124.97, 'PENDING', NULL),
-((SELECT id FROM orders WHERE order_number = 'ORD-2025-005' LIMIT 1), 'CREDIT_CARD', NULL, 49.99, 'PENDING', NULL)
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-001' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-001', 6289000, 'SUCCESS', '2025-01-10 10:30:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-002' LIMIT 1), 'PAYPAL', 'PP-2025-002', 2196000, 'SUCCESS', '2025-01-10 14:20:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-003' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-003', 69990000, 'SUCCESS', '2025-01-11 09:15:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-004' LIMIT 1), 'BANK_TRANSFER', NULL, 0, 'PENDING', NULL),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-005' LIMIT 1), 'CREDIT_CARD', NULL, 0, 'PENDING', NULL),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-006' LIMIT 1), 'MOMO', 'MOMO-2025-006', 1428000, 'SUCCESS', '2025-01-12 08:45:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-007' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-007', 7990000, 'REFUNDED', '2025-01-12 09:20:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-008' LIMIT 1), 'CREDIT_CARD', 'TXN-2025-008', 28980000, 'SUCCESS', '2025-01-12 11:05:00'),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-009' LIMIT 1), 'BANK_TRANSFER', NULL, 0, 'PENDING', NULL),
+((SELECT id FROM orders WHERE order_number = 'ORD-2025-010' LIMIT 1), 'PAYPAL', 'PP-2025-010', 5490000, 'SUCCESS', '2025-01-12 15:30:00')
 ON CONFLICT DO NOTHING;
 
 COMMENT ON TABLE users IS 'Store user accounts information';
