@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Loading, Modal, useToast } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
@@ -181,6 +187,7 @@ const OrderManagementPage: React.FC = () => {
   >("");
   const [adminNotesDraft, setAdminNotesDraft] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -216,7 +223,7 @@ const OrderManagementPage: React.FC = () => {
   }, [startDate, endDate, showToast]);
 
   const loadOrders = useCallback(
-    async (page: number = 0) => {
+    async (page: number = 0, options?: { scroll?: boolean }) => {
       if (!validateDateRange()) {
         return;
       }
@@ -240,6 +247,14 @@ const OrderManagementPage: React.FC = () => {
       } finally {
         setIsLoading(false);
         setIsFetching(false);
+        if (options?.scroll) {
+          requestAnimationFrame(() => {
+            listRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          });
+        }
       }
     },
     [buildQueryParams, showToast, validateDateRange]
@@ -510,6 +525,7 @@ const OrderManagementPage: React.FC = () => {
                     value={startDate}
                     onChange={(event) => setStartDate(event.target.value)}
                     className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12"
+                    style={{ colorScheme: "dark" }}
                   />
                 </div>
                 <div>
@@ -521,6 +537,7 @@ const OrderManagementPage: React.FC = () => {
                     value={endDate}
                     onChange={(event) => setEndDate(event.target.value)}
                     className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12"
+                    style={{ colorScheme: "dark" }}
                   />
                 </div>
               </div>
@@ -528,170 +545,182 @@ const OrderManagementPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="bg-gray-800 border border-gray-700 rounded-2xl shadow-lg">
-          <div className="p-6 space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-semibold text-white">
-                Danh sách đơn hàng
-              </h2>
-              <span className="text-sm text-gray-400">{totalRangeLabel}</span>
-            </div>
-
-            {isFetching && (
-              <div className="flex items-center gap-2 text-sm text-blue-300">
-                <Loading size="sm" />
-                <span>Đang tải dữ liệu...</span>
-              </div>
-            )}
-
-            <div className="overflow-x-auto rounded-xl border border-gray-700">
-              <table className="w-full divide-y divide-gray-700">
-                <thead className="bg-gray-900/80">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Đơn hàng
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Khách hàng
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Thời gian
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Tổng tiền
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Trạng thái
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Thanh toán
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-900/40 divide-y divide-gray-800">
-                  {orders.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-6 py-10 text-center text-gray-500"
-                      >
-                        Không có đơn hàng nào phù hợp với bộ lọc.
-                      </td>
-                    </tr>
-                  )}
-
-                  {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-800/60">
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="text-white font-medium">
-                            {order.orderNumber}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {order.orderItems?.length ?? 0} sản phẩm
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="text-white font-medium">
-                            {order.shippingName}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {order.shippingPhone || "Không có số"}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">
-                        {formatDateTime(order.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white font-semibold">
-                        {formatCurrency(order.totalAmount)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${statusBadgeClasses[order.status]}`}
-                        >
-                          <span className="w-2 h-2 rounded-full bg-current" />
-                          {statusLabels[order.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${paymentBadgeClasses[order.paymentStatus ?? PaymentStatus.PENDING]}`}
-                        >
-                          <span className="w-2 h-2 rounded-full bg-current" />
-                          {
-                            paymentStatusLabels[
-                              order.paymentStatus ?? PaymentStatus.PENDING
-                            ]
-                          }
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Button
-                          size="sm"
-                          onClick={() => openDetailModal(order)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                        >
-                          Xem chi tiết
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
+        <div ref={listRef}>
+          <Card className="bg-gray-800 border border-gray-700 rounded-2xl shadow-lg">
+            <div className="p-6 space-y-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm text-gray-400">
-                  Trang {currentPage + 1} / {totalPages}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 0}
-                    onClick={() => loadOrders(Math.max(currentPage - 1, 0))}
-                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  >
-                    Trước
-                  </Button>
-                  {Array.from({ length: totalPages }).map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={index === currentPage ? "primary" : "outline"}
-                      size="sm"
-                      onClick={() => loadOrders(index)}
-                      className={
-                        index === currentPage
-                          ? "bg-blue-600 hover:bg-blue-700 text-white"
-                          : "border-gray-700 text-gray-300 hover:bg-gray-800"
-                      }
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage + 1 >= totalPages}
-                    onClick={() =>
-                      loadOrders(Math.min(currentPage + 1, totalPages - 1))
-                    }
-                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  >
-                    Sau
-                  </Button>
-                </div>
+                <h2 className="text-lg font-semibold text-white">
+                  Danh sách đơn hàng
+                </h2>
+                <span className="text-sm text-gray-400">{totalRangeLabel}</span>
               </div>
-            )}
-          </div>
-        </Card>
+
+              {isFetching && (
+                <div className="flex items-center gap-2 text-sm text-blue-300">
+                  <Loading size="sm" />
+                  <span>Đang tải dữ liệu...</span>
+                </div>
+              )}
+
+              <div className="overflow-x-auto rounded-xl border border-gray-700">
+                <table className="w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-900/80">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Đơn hàng
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Khách hàng
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Thời gian
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Tổng tiền
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Trạng thái
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Thanh toán
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-900/40 divide-y divide-gray-800">
+                    {orders.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-6 py-10 text-center text-gray-500"
+                        >
+                          Không có đơn hàng nào phù hợp với bộ lọc.
+                        </td>
+                      </tr>
+                    )}
+
+                    {orders.map((order) => (
+                      <tr key={order.id} className="hover:bg-gray-800/60">
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <p className="text-white font-medium">
+                              {order.orderNumber}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {order.orderItems?.length ?? 0} sản phẩm
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <p className="text-white font-medium">
+                              {order.shippingName}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {order.shippingPhone || "Không có số"}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          {formatDateTime(order.createdAt)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white font-semibold">
+                          {formatCurrency(order.totalAmount)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${statusBadgeClasses[order.status]}`}
+                          >
+                            <span className="w-2 h-2 rounded-full bg-current" />
+                            {statusLabels[order.status]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${paymentBadgeClasses[order.paymentStatus ?? PaymentStatus.PENDING]}`}
+                          >
+                            <span className="w-2 h-2 rounded-full bg-current" />
+                            {
+                              paymentStatusLabels[
+                                order.paymentStatus ?? PaymentStatus.PENDING
+                              ]
+                            }
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button
+                            size="sm"
+                            onClick={() => openDetailModal(order)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                          >
+                            Xem chi tiết
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-gray-400">
+                    Trang {currentPage + 1} / {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 0}
+                      onClick={() =>
+                        loadOrders(Math.max(currentPage - 1, 0), {
+                          scroll: true,
+                        })
+                      }
+                      className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                    >
+                      Trước
+                    </Button>
+                    {Array.from({ length: totalPages }).map((_, index) => (
+                      <Button
+                        key={index}
+                        variant={index === currentPage ? "primary" : "outline"}
+                        size="sm"
+                        onClick={() =>
+                          loadOrders(index, {
+                            scroll: true,
+                          })
+                        }
+                        className={
+                          index === currentPage
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "border-gray-700 text-gray-300 hover:bg-gray-800"
+                        }
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage + 1 >= totalPages}
+                      onClick={() =>
+                        loadOrders(Math.min(currentPage + 1, totalPages - 1), {
+                          scroll: true,
+                        })
+                      }
+                      className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                    >
+                      Sau
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
 
       <Modal
