@@ -559,113 +559,118 @@ const OrderManagementPage: React.FC = () => {
                 <span className="text-sm text-gray-400">{totalRangeLabel}</span>
               </div>
 
-              {isFetching && (
-                <div className="flex items-center gap-2 text-sm text-blue-300">
-                  <Loading size="sm" />
-                  <span>Đang tải dữ liệu...</span>
-                </div>
-              )}
-
-              <div className="overflow-x-auto rounded-xl border border-gray-700">
-                <table className="w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-900/80">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Đơn hàng
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Khách hàng
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Thời gian
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Tổng tiền
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Trạng thái
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Thanh toán
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-900/40 divide-y divide-gray-800">
-                    {orders.length === 0 && (
+              <div className="relative">
+                {isFetching && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl bg-gray-900/65 backdrop-blur-sm text-blue-200">
+                    <Loading size="sm" />
+                    <span className="text-sm">Đang tải dữ liệu...</span>
+                  </div>
+                )}
+                <div
+                  className={`overflow-x-auto rounded-xl border border-gray-700 transition-opacity ${
+                    isFetching ? "opacity-60" : "opacity-100"
+                  }`}
+                >
+                  <table className="w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-900/80">
                       <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-10 text-center text-gray-500"
-                        >
-                          Không có đơn hàng nào phù hợp với bộ lọc.
-                        </td>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Đơn hàng
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Khách hàng
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Thời gian
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Tổng tiền
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Thanh toán
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          Thao tác
+                        </th>
                       </tr>
-                    )}
+                    </thead>
+                    <tbody className="bg-gray-900/40 divide-y divide-gray-800">
+                      {orders.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="px-6 py-10 text-center text-gray-500"
+                          >
+                            Không có đơn hàng nào phù hợp với bộ lọc.
+                          </td>
+                        </tr>
+                      )}
 
-                    {orders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-800/60">
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <p className="text-white font-medium">
-                              {order.orderNumber}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {order.orderItems?.length ?? 0} sản phẩm
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <p className="text-white font-medium">
-                              {order.shippingName}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {order.shippingPhone || "Không có số"}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-300">
-                          {formatDateTime(order.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-white font-semibold">
-                          {formatCurrency(order.totalAmount)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${statusBadgeClasses[order.status]}`}
-                          >
-                            <span className="w-2 h-2 rounded-full bg-current" />
-                            {statusLabels[order.status]}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${paymentBadgeClasses[order.paymentStatus ?? PaymentStatus.PENDING]}`}
-                          >
-                            <span className="w-2 h-2 rounded-full bg-current" />
-                            {
-                              paymentStatusLabels[
-                                order.paymentStatus ?? PaymentStatus.PENDING
-                              ]
-                            }
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => openDetailModal(order)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                          >
-                            Xem chi tiết
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      {orders.map((order) => (
+                        <tr key={order.id} className="hover:bg-gray-800/60">
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <p className="text-white font-medium">
+                                {order.orderNumber}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {order.orderItems?.length ?? 0} sản phẩm
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <p className="text-white font-medium">
+                                {order.shippingName}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {order.shippingPhone || "Không có số"}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-300">
+                            {formatDateTime(order.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-white font-semibold">
+                            {formatCurrency(order.totalAmount)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${statusBadgeClasses[order.status]}`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-current" />
+                              {statusLabels[order.status]}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${paymentBadgeClasses[order.paymentStatus ?? PaymentStatus.PENDING]}`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-current" />
+                              {
+                                paymentStatusLabels[
+                                  order.paymentStatus ?? PaymentStatus.PENDING
+                                ]
+                              }
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button
+                              size="sm"
+                              onClick={() => openDetailModal(order)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                            >
+                              Xem chi tiết
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {totalPages > 1 && (
