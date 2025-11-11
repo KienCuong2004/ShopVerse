@@ -74,12 +74,15 @@ public class UserService {
     }
     
     public boolean validateUser(LoginDTO loginDTO) {
+        String usernameOrEmail = normalizeUsernameOrEmail(loginDTO.getUsernameOrEmail());
+        String password = normalizePassword(loginDTO.getPassword());
+
         User user = userRepository.findByUsernameOrEmail(
-                loginDTO.getUsernameOrEmail(), 
-                loginDTO.getUsernameOrEmail()
+                usernameOrEmail,
+                usernameOrEmail
         ).orElseThrow(() -> new UnauthorizedException("Invalid username/email or password"));
         
-        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new UnauthorizedException("Invalid username/email or password");
         }
         
@@ -91,8 +94,24 @@ public class UserService {
     }
     
     public User getUserEntityByUsernameOrEmail(String usernameOrEmail) {
-        return userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+        String normalized = normalizeUsernameOrEmail(usernameOrEmail);
+        return userRepository.findByUsernameOrEmail(normalized, normalized)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username/email", usernameOrEmail));
+    }
+
+    private String normalizeUsernameOrEmail(String input) {
+        if (input == null) {
+            return "";
+        }
+        String trimmed = input.trim();
+        if (trimmed.contains("@")) {
+            return trimmed.toLowerCase();
+        }
+        return trimmed;
+    }
+
+    private String normalizePassword(String input) {
+        return input == null ? "" : input.trim();
     }
     
     public User getUserEntity(String username) {

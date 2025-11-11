@@ -921,364 +921,351 @@ const ProductsManagementPage: React.FC = () => {
         </Card>
 
         <Card className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-lg">
-          <div className="relative">
-            {isFetching && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-900/70 backdrop-blur-sm text-blue-200">
-                <Loading size="sm" />
-                <span className="text-sm">Đang tải dữ liệu...</span>
-              </div>
-            )}
-
-            <div
-              className={`hidden lg:block overflow-x-auto transition-opacity ${
-                isFetching ? "opacity-60 pointer-events-none" : "opacity-100"
-              }`}
-            >
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Sản phẩm
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Danh mục
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Giá bán
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Tồn kho
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Trạng thái
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Thao tác
-                    </th>
+          <div className="hidden lg:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Sản phẩm
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Danh mục
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Giá bán
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Tồn kho
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {isFetching ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-16 text-center text-gray-400"
+                    >
+                      <Loading />
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {products.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-6 py-16 text-center text-gray-400"
-                      >
-                        {debouncedSearchTerm ||
-                        selectedCategory ||
-                        selectedStatus
-                          ? "Không tìm thấy sản phẩm nào phù hợp."
-                          : "Chưa có sản phẩm nào trong hệ thống."}
-                      </td>
-                    </tr>
-                  ) : (
-                    products.map((product) => {
-                      const isLowStock =
-                        product.stockQuantity <= STOCK_WARNING_THRESHOLD;
-                      return (
-                        <tr
-                          key={product.id}
-                          className="border-b border-gray-700 hover:bg-gray-750 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-700 bg-gray-900">
-                                {product.imageUrl ? (
-                                  <Image
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    width={64}
-                                    height={64}
-                                    className="w-full h-full object-cover"
-                                    unoptimized
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-900">
-                                    <FaBoxOpen className="w-6 h-6" />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <p className="text-white font-semibold">
-                                  {product.name}
-                                </p>
-                                <p className="text-sm text-gray-400">
-                                  SKU: {product.sku || "Không có"}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            {product.categoryName || "Không có"}
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            <div className="flex flex-col">
-                              <span className="text-white font-semibold">
-                                {formatCurrency(product.price)}
-                              </span>
-                              {product.discountPrice ? (
-                                <span className="text-sm text-emerald-300">
-                                  Giá khuyến mãi:{" "}
-                                  {formatCurrency(product.discountPrice)}
-                                </span>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                                  isLowStock
-                                    ? "bg-amber-500/20 text-amber-300"
-                                    : "bg-blue-500/20 text-blue-200"
-                                }`}
-                              >
-                                <FaTags className="w-4 h-4" />
-                                {product.stockQuantity}
-                              </span>
-                              {isLowStock && (
-                                <span className="text-xs text-amber-300">
-                                  Sắp hết hàng
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                                statusStyles[product.status]
-                              }`}
-                            >
-                              <FaCheck className="w-4 h-4" />
-                              {statusLabels[product.status]}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openEditModal(product)}
-                                className="border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
-                              >
-                                Sửa
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={() => openDeleteModal(product)}
-                                className="bg-red-600/80 hover:bg-red-500 text-white"
-                              >
-                                Xóa
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              className={`lg:hidden transition-opacity ${
-                isFetching ? "opacity-60 pointer-events-none" : "opacity-100"
-              }`}
-            >
-              {products.length === 0 ? (
-                <div className="px-4 py-10 text-center text-gray-400">
-                  {debouncedSearchTerm || selectedCategory || selectedStatus
-                    ? "Không tìm thấy sản phẩm nào phù hợp."
-                    : "Chưa có sản phẩm nào trong hệ thống."}
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-700">
-                  {products.map((product) => {
+                ) : products.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-16 text-center text-gray-400"
+                    >
+                      {debouncedSearchTerm || selectedCategory || selectedStatus
+                        ? "Không tìm thấy sản phẩm nào phù hợp."
+                        : "Chưa có sản phẩm nào trong hệ thống."}
+                    </td>
+                  </tr>
+                ) : (
+                  products.map((product) => {
                     const isLowStock =
                       product.stockQuantity <= STOCK_WARNING_THRESHOLD;
                     return (
-                      <div key={product.id} className="p-4 space-y-4">
-                        <div className="flex gap-4">
-                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-700 bg-gray-900">
-                            {product.imageUrl ? (
-                              <Image
-                                src={product.imageUrl}
-                                alt={product.name}
-                                width={80}
-                                height={80}
-                                className="w-full h-full object-cover"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-900">
-                                <FaBoxOpen className="w-6 h-6" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 space-y-2">
+                      <tr
+                        key={product.id}
+                        className="border-b border-gray-700 hover:bg-gray-750 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-700 bg-gray-900">
+                              {product.imageUrl ? (
+                                <Image
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  width={64}
+                                  height={64}
+                                  className="w-full h-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-900">
+                                  <FaBoxOpen className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
                             <div>
-                              <p className="text-white font-semibold text-lg">
+                              <p className="text-white font-semibold">
                                 {product.name}
                               </p>
                               <p className="text-sm text-gray-400">
                                 SKU: {product.sku || "Không có"}
                               </p>
                             </div>
-                            <div className="text-gray-300">
-                              <p className="text-sm">
-                                Giá:{" "}
-                                <span className="text-white font-semibold">
-                                  {formatCurrency(product.price)}
-                                </span>
-                              </p>
-                              {product.discountPrice ? (
-                                <p className="text-sm text-emerald-300">
-                                  Khuyến mãi:{" "}
-                                  {formatCurrency(product.discountPrice)}
-                                </p>
-                              ) : null}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                                  isLowStock
-                                    ? "bg-amber-500/20 text-amber-300"
-                                    : "bg-blue-500/20 text-blue-200"
-                                }`}
-                              >
-                                <FaTags className="w-4 h-4" />
-                                {product.stockQuantity}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">
+                          {product.categoryName || "Không có"}
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">
+                          <div className="flex flex-col">
+                            <span className="text-white font-semibold">
+                              {formatCurrency(product.price)}
+                            </span>
+                            {product.discountPrice ? (
+                              <span className="text-sm text-emerald-300">
+                                Giá khuyến mãi:{" "}
+                                {formatCurrency(product.discountPrice)}
                               </span>
-                              {isLowStock && (
-                                <span className="text-xs text-amber-300">
-                                  Sắp hết hàng
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <span
-                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                                  statusStyles[product.status]
-                                }`}
-                              >
-                                <FaCheck className="w-4 h-4" />
-                                {statusLabels[product.status]}
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                                isLowStock
+                                  ? "bg-amber-500/20 text-amber-300"
+                                  : "bg-blue-500/20 text-blue-200"
+                              }`}
+                            >
+                              <FaTags className="w-4 h-4" />
+                              {product.stockQuantity}
+                            </span>
+                            {isLowStock && (
+                              <span className="text-xs text-amber-300">
+                                Sắp hết hàng
                               </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                              statusStyles[product.status]
+                            }`}
+                          >
+                            <FaCheck className="w-4 h-4" />
+                            {statusLabels[product.status]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditModal(product)}
+                              className="border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
+                            >
+                              Sửa
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => openDeleteModal(product)}
+                              className="bg-red-600/80 hover:bg-red-500 text-white"
+                            >
+                              Xóa
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="lg:hidden">
+            {isFetching ? (
+              <div className="px-4 py-10 text-center text-gray-400">
+                <Loading />
+              </div>
+            ) : products.length === 0 ? (
+              <div className="px-4 py-10 text-center text-gray-400">
+                {debouncedSearchTerm || selectedCategory || selectedStatus
+                  ? "Không tìm thấy sản phẩm nào phù hợp."
+                  : "Chưa có sản phẩm nào trong hệ thống."}
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-700">
+                {products.map((product) => {
+                  const isLowStock =
+                    product.stockQuantity <= STOCK_WARNING_THRESHOLD;
+                  return (
+                    <div key={product.id} className="p-4 space-y-4">
+                      <div className="flex gap-4">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-700 bg-gray-900">
+                          {product.imageUrl ? (
+                            <Image
+                              src={product.imageUrl}
+                              alt={product.name}
+                              width={80}
+                              height={80}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-900">
+                              <FaBoxOpen className="w-6 h-6" />
                             </div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <p className="text-white font-semibold text-lg">
+                              {product.name}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              SKU: {product.sku || "Không có"}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-sm">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200">
+                              <FaLayerGroup className="w-4 h-4" />
+                              {product.categoryName || "Không có"}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${
+                                statusStyles[product.status]
+                              }`}
+                            >
+                              <FaCheck className="w-4 h-4" />
+                              {statusLabels[product.status]}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${
+                                isLowStock
+                                  ? "bg-amber-500/20 text-amber-300"
+                                  : "bg-blue-500/20 text-blue-200"
+                              }`}
+                            >
+                              <FaTags className="w-4 h-4" />
+                              {product.stockQuantity} tồn kho
+                            </span>
+                          </div>
+                          <div className="text-white font-semibold">
+                            {formatCurrency(product.price)}
+                            {product.discountPrice ? (
+                              <span className="ml-2 text-sm text-emerald-300">
+                                {formatCurrency(product.discountPrice)}
+                              </span>
+                            ) : null}
                           </div>
                         </div>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEditModal(product)}
-                            className="border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
-                          >
-                            Sửa
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => openDeleteModal(product)}
-                            className="bg-red-600/80 hover:bg-red-500 text-white"
-                          >
-                            Xóa
-                          </Button>
-                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {totalPages > 1 && (
-          <div className="flex flex-col gap-4 px-4 py-4 border-t border-gray-700 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-            <div className="text-sm text-gray-400 text-center lg:text-left">
-              Hiển thị {startItem} - {endItem} trong tổng số {totalElements} sản
-              phẩm
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => setCurrentPage(0)}
-                disabled={currentPage === 0}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  currentPage === 0
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                Đầu
-              </button>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-                disabled={currentPage === 0}
-                className={`p-2 rounded-xl transition-colors ${
-                  currentPage === 0
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                <FaChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageIndex: number;
-                  if (totalPages <= 5) {
-                    pageIndex = i;
-                  } else if (currentPage < 3) {
-                    pageIndex = i;
-                  } else if (currentPage > totalPages - 4) {
-                    pageIndex = totalPages - 5 + i;
-                  } else {
-                    pageIndex = currentPage - 2 + i;
-                  }
-
-                  return (
-                    <button
-                      key={pageIndex}
-                      onClick={() => setCurrentPage(pageIndex)}
-                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                        currentPage === pageIndex
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-white hover:bg-gray-600"
-                      }`}
-                    >
-                      {pageIndex + 1}
-                    </button>
+                      <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+                        <Button
+                          onClick={() => openEditModal(product)}
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto border border-blue-500/40 bg-transparent text-blue-300 hover:bg-blue-600/20"
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          onClick={() => openDeleteModal(product)}
+                          size="sm"
+                          variant="danger"
+                          className="w-full sm:w-auto bg-red-600/80 hover:bg-red-500 text-white"
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-                }
-                disabled={currentPage >= totalPages - 1}
-                className={`p-2 rounded-xl transition-colors ${
-                  currentPage >= totalPages - 1
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                <FaChevronRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages - 1)}
-                disabled={currentPage >= totalPages - 1}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  currentPage >= totalPages - 1
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                Cuối
-              </button>
-            </div>
+            )}
           </div>
-        )}
+
+          {totalPages > 1 && (
+            <div className="flex flex-col gap-4 px-4 py-4 border-t border-gray-700 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+              <div className="text-sm text-gray-400 text-center lg:text-left">
+                Hiển thị {startItem} - {endItem} trong tổng số {totalElements}{" "}
+                sản phẩm
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(0)}
+                  disabled={currentPage === 0}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    currentPage === 0
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  }`}
+                >
+                  Đầu
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 0))
+                  }
+                  disabled={currentPage === 0}
+                  className={`p-2 rounded-xl transition-colors ${
+                    currentPage === 0
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  }`}
+                >
+                  <FaChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageIndex: number;
+                    if (totalPages <= 5) {
+                      pageIndex = i;
+                    } else if (currentPage < 3) {
+                      pageIndex = i;
+                    } else if (currentPage > totalPages - 4) {
+                      pageIndex = totalPages - 5 + i;
+                    } else {
+                      pageIndex = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageIndex}
+                        onClick={() => setCurrentPage(pageIndex)}
+                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                          currentPage === pageIndex
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-white hover:bg-gray-600"
+                        }`}
+                      >
+                        {pageIndex + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+                  }
+                  disabled={currentPage >= totalPages - 1}
+                  className={`p-2 rounded-xl transition-colors ${
+                    currentPage >= totalPages - 1
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  }`}
+                >
+                  <FaChevronRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages - 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    currentPage >= totalPages - 1
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  }`}
+                >
+                  Cuối
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Create Product Modal */}
