@@ -188,6 +188,7 @@ const OrderManagementPage: React.FC = () => {
   const [adminNotesDraft, setAdminNotesDraft] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const hasLoadedInitial = useRef(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -228,8 +229,10 @@ const OrderManagementPage: React.FC = () => {
         return;
       }
 
-      setIsLoading(page === 0);
-      setIsFetching(page !== 0);
+      const shouldShowInitialLoader = !hasLoadedInitial.current && page === 0;
+
+      setIsLoading(shouldShowInitialLoader);
+      setIsFetching(!shouldShowInitialLoader);
 
       try {
         const response = await ordersApi.getAdminOrders({
@@ -245,6 +248,7 @@ const OrderManagementPage: React.FC = () => {
       } catch (error) {
         showToast("Không thể tải danh sách đơn hàng", "error");
       } finally {
+        hasLoadedInitial.current = true;
         setIsLoading(false);
         setIsFetching(false);
         if (options?.scroll) {
