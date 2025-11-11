@@ -462,8 +462,8 @@ const OrderManagementPage: React.FC = () => {
 
         <Card className="bg-gray-800 border border-gray-700 rounded-2xl shadow-lg">
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
-              <div className="xl:col-span-2">
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="flex-1 min-w-[200px]">
                 <label className="block text-sm text-gray-400 mb-2">
                   Tìm kiếm
                 </label>
@@ -477,7 +477,7 @@ const OrderManagementPage: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="flex-1 min-w-[160px] max-w-[220px]">
                 <label className="block text-sm text-gray-400 mb-2">
                   Trạng thái đơn
                 </label>
@@ -497,7 +497,7 @@ const OrderManagementPage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
+              <div className="flex-1 min-w-[180px] max-w-[240px]">
                 <label className="block text-sm text-gray-400 mb-2">
                   Trạng thái thanh toán
                 </label>
@@ -519,8 +519,8 @@ const OrderManagementPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+              <div className="flex flex-wrap gap-3 flex-1 min-w-[320px] justify-end">
+                <div className="flex-1 min-w-[150px]">
                   <label className="block text-sm text-gray-400 mb-2">
                     Từ ngày
                   </label>
@@ -528,11 +528,11 @@ const OrderManagementPage: React.FC = () => {
                     type="date"
                     value={startDate}
                     onChange={(event) => setStartDate(event.target.value)}
-                    className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12"
+                    className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12 min-w-[160px]"
                     style={{ colorScheme: "dark" }}
                   />
                 </div>
-                <div>
+                <div className="flex-1 min-w-[150px]">
                   <label className="block text-sm text-gray-400 mb-2">
                     Đến ngày
                   </label>
@@ -540,7 +540,7 @@ const OrderManagementPage: React.FC = () => {
                     type="date"
                     value={endDate}
                     onChange={(event) => setEndDate(event.target.value)}
-                    className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12"
+                    className="bg-gray-900 border border-gray-700 text-white focus:border-blue-500 rounded-xl h-12 min-w-[160px]"
                     style={{ colorScheme: "dark" }}
                   />
                 </div>
