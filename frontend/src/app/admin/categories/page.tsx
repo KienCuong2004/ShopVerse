@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -178,8 +179,10 @@ const CategoryManagementPage: React.FC = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { showToast } = useToast();
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [imageOptions, setImageOptions] = useState<CategoryImageOption[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [categories, setCategories] = useState<CategoryTreeNode[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -201,24 +204,35 @@ const CategoryManagementPage: React.FC = () => {
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const loadImageOptions = useCallback(async () => {
-    try {
-      setIsLoadingImages(true);
-      const options = await categoriesApi.getImageOptions();
-      setImageOptions(options);
-      setFormValues((prev) => ({
-        ...prev,
-        imageUrl:
-          prev.imageUrl && prev.imageUrl.length > 0
-            ? prev.imageUrl
-            : (options[0]?.value ?? ""),
-      }));
-    } catch (error) {
-      showToast("Không thể tải danh sách ảnh danh mục", "error");
-    } finally {
-      setIsLoadingImages(false);
-    }
-  }, [showToast]);
+  const loadImageOptions = useCallback(
+    async (preferredImage?: string) => {
+      try {
+        setIsLoadingImages(true);
+        const options = await categoriesApi.getImageOptions();
+        setImageOptions(options);
+        setFormValues((prev) => {
+          const candidate = preferredImage ?? prev.imageUrl;
+
+          if (
+            candidate &&
+            candidate.length > 0 &&
+            (preferredImage ||
+              options.some((option) => option.value === candidate))
+          ) {
+            return { ...prev, imageUrl: candidate };
+          }
+
+          const fallback = options[0]?.value ?? "";
+          return { ...prev, imageUrl: fallback };
+        });
+      } catch (error) {
+        showToast("Không thể tải danh sách ảnh danh mục", "error");
+      } finally {
+        setIsLoadingImages(false);
+      }
+    },
+    [showToast]
+  );
 
   useEffect(() => {
     loadImageOptions();
@@ -313,6 +327,34 @@ const CategoryManagementPage: React.FC = () => {
     (formValues.imageUrl && formValues.imageUrl.length > 0
       ? formValues.imageUrl
       : imageOptions[0]?.value) ?? "";
+
+  const handlePickLocalImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const path = await categoriesApi.uploadImage(file);
+      showToast("Tải ảnh lên thành công!", "success");
+      await loadImageOptions(path);
+    } catch (error) {
+      showToast(
+        resolveErrorMessage(error, "Không thể tải ảnh lên. Vui lòng thử lại."),
+        "error"
+      );
+    } finally {
+      setIsUploadingImage(false);
+      event.target.value = "";
+    }
+  };
 
   const summary = useMemo(() => {
     const totalIds = collectAllIds(categories);
@@ -828,9 +870,22 @@ const CategoryManagementPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">
-              Ảnh đại diện
-            </label>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-medium text-gray-300">
+                Ảnh đại diện
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePickLocalImage}
+                isLoading={isUploadingImage}
+                disabled={isLoadingImages}
+                className="border-gray-700 bg-gray-800 text-gray-200 hover:border-blue-500 hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Chọn từ máy
+              </Button>
+            </div>
             <select
               value={selectedImageUrl}
               onChange={(event) =>
@@ -876,6 +931,13 @@ const CategoryManagementPage: React.FC = () => {
               </p>
             )}
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleImageFileChange}
+          />
         </form>
       </Modal>
 

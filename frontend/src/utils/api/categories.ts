@@ -80,4 +80,28 @@ export const categoriesApi = {
 
     return data.images ?? [];
   },
+
+  // Admin: upload a new category image from local machine
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("files", file);
+
+    const response = await fetch("/api/categories/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = (await response.json()) as {
+      path?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !payload.path) {
+      throw new Error(
+        payload.error || "Không thể tải ảnh danh mục lên. Vui lòng thử lại."
+      );
+    }
+
+    return payload.path;
+  },
 };
