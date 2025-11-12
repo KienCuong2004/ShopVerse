@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS categories (
     description TEXT,
     image_url VARCHAR(255),
     parent_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+    display_order INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -211,13 +212,13 @@ INSERT INTO users (username, email, password, full_name, phone, address, role) V
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert Categories
-INSERT INTO categories (name, description, image_url) VALUES
-('Electronics', 'Electronic devices, gadgets, and accessories', 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece'),
-('Clothing', 'Fashion apparel for men and women', 'https://images.unsplash.com/photo-1445205170230-053b83016050'),
-('Books', 'Books, novels, and educational materials', 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570'),
-('Home & Garden', 'Home decor and garden supplies', 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7'),
-('Sports', 'Sports equipment and athletic gear', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b'),
-('Toys & Games', 'Toys, board games, and entertainment', 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4')
+INSERT INTO categories (name, description, image_url, display_order) VALUES
+('Electronics', 'Electronic devices, gadgets, and accessories', 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece', 0),
+('Clothing', 'Fashion apparel for men and women', 'https://images.unsplash.com/photo-1445205170230-053b83016050', 1),
+('Books', 'Books, novels, and educational materials', 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570', 2),
+('Home & Garden', 'Home decor and garden supplies', 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7', 3),
+('Sports', 'Sports equipment and athletic gear', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b', 4),
+('Toys & Games', 'Toys, board games, and entertainment', 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4', 5)
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert Sub-categories (optional)
@@ -229,11 +230,11 @@ BEGIN
     SELECT id INTO electronics_id FROM categories WHERE name = 'Electronics' LIMIT 1;
     SELECT id INTO clothing_id FROM categories WHERE name = 'Clothing' LIMIT 1;
     
-    INSERT INTO categories (name, description, parent_id) VALUES
-    ('Smartphones', 'Mobile phones and accessories', electronics_id),
-    ('Laptops', 'Laptop computers and accessories', electronics_id),
-    ('Men''s Clothing', 'Clothing for men', clothing_id),
-    ('Women''s Clothing', 'Clothing for women', clothing_id)
+    INSERT INTO categories (name, description, parent_id, display_order) VALUES
+    ('Smartphones', 'Mobile phones and accessories', electronics_id, 0),
+    ('Laptops', 'Laptop computers and accessories', electronics_id, 1),
+    ('Men''s Clothing', 'Clothing for men', clothing_id, 0),
+    ('Women''s Clothing', 'Clothing for women', clothing_id, 1)
     ON CONFLICT (name) DO NOTHING;
 END $$;
 

@@ -1,5 +1,5 @@
 import apiClient from "./api";
-import { Category } from "@/types";
+import { Category, CategoryPayload, CategoryTreeNode } from "@/types";
 
 export const categoriesApi = {
   // Get all categories
@@ -29,5 +29,33 @@ export const categoriesApi = {
     return await apiClient.get<Category>(
       `/categories/name/${encodeURIComponent(name)}`
     );
+  },
+
+  // Admin: get category tree with product counts
+  getAdminTree: async (): Promise<CategoryTreeNode[]> => {
+    return await apiClient.get<CategoryTreeNode[]>("/admin/categories/tree");
+  },
+
+  // Admin: create category
+  create: async (payload: CategoryPayload): Promise<Category> => {
+    return await apiClient.post<Category>("/admin/categories", payload);
+  },
+
+  // Admin: update category
+  update: async (id: string, payload: CategoryPayload): Promise<Category> => {
+    return await apiClient.put<Category>(`/admin/categories/${id}`, payload);
+  },
+
+  // Admin: delete category
+  remove: async (id: string): Promise<void> => {
+    await apiClient.delete<void>(`/admin/categories/${id}`);
+  },
+
+  // Admin: reorder categories
+  reorder: async (payload: {
+    parentId?: string | null;
+    orderedCategoryIds: string[];
+  }): Promise<void> => {
+    await apiClient.post<void>("/admin/categories/reorder", payload);
   },
 };

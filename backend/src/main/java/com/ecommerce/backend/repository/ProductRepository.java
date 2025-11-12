@@ -47,5 +47,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Page<Product> findByMinRating(@Param("minRating") BigDecimal minRating, Pageable pageable);
     
     List<Product> findByStockQuantityGreaterThan(Integer quantity);
+    
+    long countByCategoryId(UUID categoryId);
 }
 

@@ -74,9 +74,35 @@ export interface Category {
   imageUrl?: string;
   parentId?: string;
   parentName?: string;
+  displayOrder?: number;
+  productCount?: number;
+  totalProductCount?: number;
   subCategories?: Category[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CategoryTreeNode {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  parentId?: string;
+  parentName?: string;
+  displayOrder?: number;
+  productCount: number;
+  totalProductCount: number;
+  depth: number;
+  createdAt: string;
+  updatedAt: string;
+  children: CategoryTreeNode[];
+}
+
+export interface CategoryPayload {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  parentId?: string | null;
 }
 
 // Product Types

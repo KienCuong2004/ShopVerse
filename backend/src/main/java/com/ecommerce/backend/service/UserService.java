@@ -3,13 +3,14 @@ package com.ecommerce.backend.service;
 import com.ecommerce.backend.dto.LoginDTO;
 import com.ecommerce.backend.dto.RegisterDTO;
 import com.ecommerce.backend.dto.UserDTO;
+import com.ecommerce.backend.exception.InvalidRequestException;
 import com.ecommerce.backend.exception.ResourceAlreadyExistsException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.exception.UnauthorizedException;
-import com.ecommerce.backend.exception.InvalidRequestException;
 import com.ecommerce.backend.model.User;
 import com.ecommerce.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     
     private final UserRepository userRepository;
@@ -76,6 +78,8 @@ public class UserService {
     public boolean validateUser(LoginDTO loginDTO) {
         String usernameOrEmail = normalizeUsernameOrEmail(loginDTO.getUsernameOrEmail());
         String password = normalizePassword(loginDTO.getPassword());
+
+        log.debug("Attempting login for user identifier='{}'", usernameOrEmail);
 
         User user = userRepository.findByUsernameOrEmail(
                 usernameOrEmail,

@@ -15,9 +15,9 @@ export default function Home() {
       if (!isAuthenticated) {
         router.push("/login");
       } else {
-        // Redirect admin to order management, others to products listing
+        // Redirect admin to category management, others to products listing
         if (user?.role === UserRole.ADMIN) {
-          router.push("/admin/orders");
+          router.push("/admin/categories");
         } else {
           router.push("/products");
         }

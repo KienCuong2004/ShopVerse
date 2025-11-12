@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,6 +23,8 @@ public class CategoryDTO {
     private UUID parentId;
     private String parentName;
     private List<CategoryDTO> subCategories;
+    private Integer displayOrder;
+    private Long productCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -41,7 +44,14 @@ public class CategoryDTO {
             this.subCategories = category.getSubCategories().stream()
                     .map(CategoryDTO::new)
                     .collect(Collectors.toList());
+        } else {
+            this.subCategories = Collections.emptyList();
         }
+        
+        this.displayOrder = category.getDisplayOrder();
+        this.productCount = category.getProducts() != null
+                ? (long) category.getProducts().size()
+                : 0L;
         
         this.createdAt = category.getCreatedAt();
         this.updatedAt = category.getUpdatedAt();
