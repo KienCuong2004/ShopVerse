@@ -213,12 +213,12 @@ ON CONFLICT (username) DO NOTHING;
 
 -- Insert Categories
 INSERT INTO categories (name, description, image_url, display_order) VALUES
-('Electronics', 'Electronic devices, gadgets, and accessories', 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece', 0),
-('Clothing', 'Fashion apparel for men and women', 'https://images.unsplash.com/photo-1445205170230-053b83016050', 1),
-('Books', 'Books, novels, and educational materials', 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570', 2),
-('Home & Garden', 'Home decor and garden supplies', 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7', 3),
-('Sports', 'Sports equipment and athletic gear', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b', 4),
-('Toys & Games', 'Toys, board games, and entertainment', 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4', 5)
+('Electronics', 'Electronic devices, gadgets, and accessories', '/assets/images/categories/electronics.jpg', 0),
+('Clothing', 'Fashion apparel for men and women', '/assets/images/categories/clothing.jpg', 1),
+('Books', 'Books, novels, and educational materials', '/assets/images/categories/books.jpg', 2),
+('Home & Garden', 'Home decor and garden supplies', '/assets/images/categories/home-garden.jpg', 3),
+('Sports', 'Sports equipment and athletic gear', '/assets/images/categories/sports.jpg', 4),
+('Toys & Games', 'Toys, board games, and entertainment', '/assets/images/categories/toys-games.jpg', 5)
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert Sub-categories (optional)

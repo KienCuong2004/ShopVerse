@@ -1,5 +1,10 @@
 import apiClient from "./api";
-import { Category, CategoryPayload, CategoryTreeNode } from "@/types";
+import {
+  Category,
+  CategoryImageOption,
+  CategoryPayload,
+  CategoryTreeNode,
+} from "@/types";
 
 export const categoriesApi = {
   // Get all categories
@@ -57,5 +62,22 @@ export const categoriesApi = {
     orderedCategoryIds: string[];
   }): Promise<void> => {
     await apiClient.post<void>("/admin/categories/reorder", payload);
+  },
+
+  // Admin: fetch available category images from Next.js API route
+  getImageOptions: async (): Promise<CategoryImageOption[]> => {
+    const response = await fetch("/api/categories/images", {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể tải danh sách ảnh danh mục");
+    }
+
+    const data = (await response.json()) as {
+      images?: CategoryImageOption[];
+    };
+
+    return data.images ?? [];
   },
 };

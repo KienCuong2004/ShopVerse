@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { categoriesApi } from "@/utils/api";
 import {
   ApiError,
+  CategoryImageOption,
   CategoryPayload,
   CategoryTreeNode,
   UserRole,
@@ -122,7 +123,7 @@ const reorderInTree = (
 ): { tree: CategoryTreeNode[]; orderedIds: string[] } => {
   const cloned = cloneTree(nodes);
   const siblings = parentId
-    ? findNode(cloned, parentId)?.children ?? []
+    ? (findNode(cloned, parentId)?.children ?? [])
     : cloned;
 
   const currentIndex = siblings.findIndex((item) => item.id === categoryId);
@@ -177,6 +178,8 @@ const CategoryManagementPage: React.FC = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { showToast } = useToast();
 
+  const [imageOptions, setImageOptions] = useState<CategoryImageOption[]>([]);
+  const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [categories, setCategories] = useState<CategoryTreeNode[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -197,6 +200,29 @@ const CategoryManagementPage: React.FC = () => {
     null
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const loadImageOptions = useCallback(async () => {
+    try {
+      setIsLoadingImages(true);
+      const options = await categoriesApi.getImageOptions();
+      setImageOptions(options);
+      setFormValues((prev) => ({
+        ...prev,
+        imageUrl:
+          prev.imageUrl && prev.imageUrl.length > 0
+            ? prev.imageUrl
+            : (options[0]?.value ?? ""),
+      }));
+    } catch (error) {
+      showToast("Không thể tải danh sách ảnh danh mục", "error");
+    } finally {
+      setIsLoadingImages(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    loadImageOptions();
+  }, [loadImageOptions]);
 
   const loadCategories = useCallback(
     async (withFullLoader = false, expandIds: string[] = []) => {
@@ -258,10 +284,35 @@ const CategoryManagementPage: React.FC = () => {
     }
   }, [authLoading, isAuthenticated, user, router, showToast, loadCategories]);
 
-  const flattenedOptions = useMemo(
-    () => flattenTree(categories),
-    [categories]
-  );
+  const flattenedOptions = useMemo(() => flattenTree(categories), [categories]);
+
+  const combinedImageOptions = useMemo(() => {
+    if (!formValues.imageUrl || formValues.imageUrl.length === 0) {
+      return imageOptions;
+    }
+
+    const exists = imageOptions.some(
+      (option) => option.value === formValues.imageUrl
+    );
+
+    if (exists) {
+      return imageOptions;
+    }
+
+    return [
+      ...imageOptions,
+      {
+        value: formValues.imageUrl,
+        label: `Tuỳ chỉnh (${formValues.imageUrl})`,
+        filename: formValues.imageUrl,
+      },
+    ];
+  }, [imageOptions, formValues.imageUrl]);
+
+  const selectedImageUrl =
+    (formValues.imageUrl && formValues.imageUrl.length > 0
+      ? formValues.imageUrl
+      : imageOptions[0]?.value) ?? "";
 
   const summary = useMemo(() => {
     const totalIds = collectAllIds(categories);
@@ -301,7 +352,7 @@ const CategoryManagementPage: React.FC = () => {
     setFormValues({
       name: "",
       description: "",
-      imageUrl: "",
+      imageUrl: imageOptions[0]?.value ?? "",
       parentId,
     });
     setFormErrors({});
@@ -318,7 +369,10 @@ const CategoryManagementPage: React.FC = () => {
     setFormValues({
       name: category.name,
       description: category.description ?? "",
-      imageUrl: category.imageUrl ?? "",
+      imageUrl:
+        category.imageUrl && category.imageUrl.length > 0
+          ? category.imageUrl
+          : (imageOptions[0]?.value ?? ""),
       parentId: category.parentId ?? null,
     });
     setFormErrors({});
@@ -375,10 +429,7 @@ const CategoryManagementPage: React.FC = () => {
       }
       closeFormModal();
     } catch (error) {
-      showToast(
-        resolveErrorMessage(error, "Không thể lưu danh mục"),
-        "error"
-      );
+      showToast(resolveErrorMessage(error, "Không thể lưu danh mục"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -454,10 +505,7 @@ const CategoryManagementPage: React.FC = () => {
       const parentId = deleteTarget.parentId ?? null;
       await loadCategories(false, parentId ? [parentId] : []);
     } catch (error) {
-      showToast(
-        resolveErrorMessage(error, "Không thể xóa danh mục"),
-        "error"
-      );
+      showToast(resolveErrorMessage(error, "Không thể xóa danh mục"), "error");
     } finally {
       closeDeleteModal();
     }
@@ -601,7 +649,10 @@ const CategoryManagementPage: React.FC = () => {
             <Button
               variant="outline"
               className="border-gray-700 bg-gray-800 text-gray-200 hover:border-blue-500 hover:bg-blue-500/10"
-              onClick={() => loadCategories(true)}
+              onClick={() => {
+                void loadImageOptions();
+                void loadCategories(true);
+              }}
             >
               Làm mới
             </Button>
@@ -667,8 +718,8 @@ const CategoryManagementPage: React.FC = () => {
             )}
           </div>
           <p className="mt-2 text-sm text-gray-400">
-            Kéo-thả để thay đổi thứ tự trong cùng một cấp độ. Nhấn "Thêm con"
-            để tạo danh mục đa cấp.
+            Kéo-thả để thay đổi thứ tự trong cùng một cấp độ. Nhấn "Thêm con" để
+            tạo danh mục đa cấp.
           </p>
           <div className="mt-6">
             {categories.length === 0 ? (
@@ -776,18 +827,55 @@ const CategoryManagementPage: React.FC = () => {
             />
           </div>
 
-          <Input
-            label="Ảnh đại diện (URL)"
-            value={formValues.imageUrl ?? ""}
-            onChange={(event) =>
-              setFormValues((prev) => ({
-                ...prev,
-                imageUrl: event.target.value,
-              }))
-            }
-            placeholder="https://..."
-            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500"
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">
+              Ảnh đại diện
+            </label>
+            <select
+              value={selectedImageUrl}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  imageUrl: event.target.value,
+                }))
+              }
+              disabled={isLoadingImages || combinedImageOptions.length === 0}
+              className="h-12 w-full rounded-lg border border-gray-700 bg-gray-800 px-4 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingImages && <option>Đang tải...</option>}
+              {!isLoadingImages && combinedImageOptions.length === 0 && (
+                <option>Chưa có ảnh trong thư mục</option>
+              )}
+              {combinedImageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {!isLoadingImages && selectedImageUrl && (
+              <div className="flex items-center gap-3 rounded-lg border border-gray-800 bg-gray-900/60 p-3">
+                <img
+                  src={selectedImageUrl}
+                  alt="Xem trước ảnh danh mục"
+                  className="h-16 w-16 rounded-lg object-cover"
+                  onError={(event) => {
+                    (event.currentTarget as HTMLImageElement).style.display =
+                      "none";
+                  }}
+                />
+                <span className="text-xs text-gray-400 break-all">
+                  {selectedImageUrl}
+                </span>
+              </div>
+            )}
+            {!isLoadingImages && combinedImageOptions.length === 0 && (
+              <p className="text-xs text-amber-400">
+                Chưa có ảnh trong thư mục `public/assets/images/categories`. Hãy
+                thêm ảnh mới (Git sẽ bỏ qua thư mục này) rồi nhấn "Làm mới" để
+                tải lại.
+              </p>
+            )}
+          </div>
         </form>
       </Modal>
 
@@ -817,9 +905,7 @@ const CategoryManagementPage: React.FC = () => {
       >
         <p className="text-gray-300">
           Bạn có chắc chắn muốn xóa danh mục{" "}
-          <span className="font-semibold text-white">
-            {deleteTarget?.name}
-          </span>{" "}
+          <span className="font-semibold text-white">{deleteTarget?.name}</span>{" "}
           không? Thao tác này không thể hoàn tác.
         </p>
       </Modal>
@@ -828,4 +914,3 @@ const CategoryManagementPage: React.FC = () => {
 };
 
 export default CategoryManagementPage;
-

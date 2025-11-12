@@ -98,6 +98,12 @@ export interface CategoryTreeNode {
   children: CategoryTreeNode[];
 }
 
+export interface CategoryImageOption {
+  value: string;
+  label: string;
+  filename: string;
+}
+
 export interface CategoryPayload {
   name: string;
   description?: string;
