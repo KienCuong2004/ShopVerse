@@ -20,8 +20,6 @@ const MIME_TYPE_EXTENSION_MAP: Record<string, string> = {
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-export const runtime = "nodejs";
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
