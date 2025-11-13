@@ -40,6 +40,44 @@ CREATE TABLE IF NOT EXISTS categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Banners table
+CREATE TABLE IF NOT EXISTS banners (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(150) NOT NULL,
+    subtitle VARCHAR(255),
+    description TEXT,
+    image_url VARCHAR(255) NOT NULL,
+    button_text VARCHAR(100),
+    button_link VARCHAR(255),
+    display_order INT DEFAULT 0 NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    schedule_start TIMESTAMP,
+    schedule_end TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Coupons table
+CREATE TABLE IF NOT EXISTS coupons (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    discount_type VARCHAR(20) NOT NULL CHECK (discount_type IN ('PERCENTAGE', 'FIXED_AMOUNT')),
+    discount_value DECIMAL(10, 2) NOT NULL CHECK (discount_value > 0),
+    max_discount_value DECIMAL(10, 2),
+    minimum_order_value DECIMAL(10, 2),
+    usage_limit INT,
+    per_user_limit INT,
+    usage_count INT DEFAULT 0 NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    segment VARCHAR(50) DEFAULT 'ALL' NOT NULL CHECK (segment IN ('ALL', 'NEW_CUSTOMER', 'RETURNING_CUSTOMER', 'VIP_CUSTOMER')),
+    start_at TIMESTAMP,
+    end_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Products table
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -150,6 +188,9 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_banners_active_order ON banners(is_active, display_order);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
+CREATE INDEX IF NOT EXISTS idx_coupons_segment ON coupons(segment);
 
 -- ============================================
 -- TRIGGERS FOR UPDATED_AT
@@ -191,6 +232,14 @@ DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
 CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_banners_updated_at ON banners;
+CREATE TRIGGER update_banners_updated_at BEFORE UPDATE ON banners
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_coupons_updated_at ON coupons;
+CREATE TRIGGER update_coupons_updated_at BEFORE UPDATE ON coupons
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================
 -- SAMPLE DATA
 -- ============================================
@@ -220,6 +269,18 @@ INSERT INTO categories (name, description, image_url, display_order) VALUES
 ('Sports', 'Sports equipment and athletic gear', '/assets/images/categories/sports.jpg', 4),
 ('Toys & Games', 'Toys, board games, and entertainment', '/assets/images/categories/toys-games.jpg', 5)
 ON CONFLICT (name) DO NOTHING;
+
+-- Insert Banners
+INSERT INTO banners (title, subtitle, description, image_url, button_text, button_link, display_order, is_active, schedule_start, schedule_end) VALUES
+('Super Sale Tháng 11', 'Giảm đến 50%', 'Săn ưu đãi cực sốc cho hàng ngàn sản phẩm điện tử', '/assets/images/products/iphone-15-pro-main.jpg', 'Mua ngay', '/products?category=electronics', 0, TRUE, CURRENT_TIMESTAMP - INTERVAL '1 DAY', CURRENT_TIMESTAMP + INTERVAL '15 DAY'),
+('Thời Trang Đông Ấm Áp', 'Ưu đãi độc quyền', 'Bộ sưu tập thời trang mùa đông 2025 với nhiều mẫu mới', '/assets/images/products/leather-jacket-main.jpg', 'Khám phá', '/products?category=clothing', 1, TRUE, CURRENT_TIMESTAMP + INTERVAL '2 DAY', CURRENT_TIMESTAMP + INTERVAL '30 DAY')
+ON CONFLICT DO NOTHING;
+
+-- Insert Coupons
+INSERT INTO coupons (code, name, description, discount_type, discount_value, max_discount_value, minimum_order_value, usage_limit, per_user_limit, usage_count, is_active, segment, start_at, end_at) VALUES
+('WELCOME2025', 'Ưu đãi khách hàng mới', 'Giảm 15% cho đơn hàng đầu tiên của bạn', 'PERCENTAGE', 15.00, 300000.00, 500000.00, 1000, 1, 0, TRUE, 'NEW_CUSTOMER', CURRENT_TIMESTAMP - INTERVAL '7 DAY', CURRENT_TIMESTAMP + INTERVAL '60 DAY'),
+('VIP500K', 'Quà tặng VIP', 'Giảm ngay 500.000đ cho khách hàng VIP', 'FIXED_AMOUNT', 500000.00, 500000.00, 1500000.00, 200, 2, 0, TRUE, 'VIP_CUSTOMER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '90 DAY')
+ON CONFLICT (code) DO NOTHING;
 
 -- Insert Sub-categories (optional)
 DO $$
