@@ -67,6 +67,7 @@ export interface RegisterRequest {
   fullName?: string;
   phone?: string;
   address?: string;
+  role?: UserRole;
 }
 
 export interface LoginRequest {
@@ -300,6 +301,42 @@ export interface OrderSummary {
   completedOrders: number;
   cancelledOrders: number;
   totalRevenue: number;
+}
+
+export interface AdminDashboardSummary {
+  totalRevenue: number;
+  revenue30Days: number;
+  totalOrders: number;
+  pendingOrders: number;
+  deliveredOrders: number;
+  totalCustomers: number;
+  newCustomers: number;
+  totalProducts: number;
+  lowStockProducts: number;
+  activeBanners: number;
+  activeCoupons: number;
+}
+
+export interface RevenueTrendPoint {
+  date: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface RecentOrderSummary {
+  id: string;
+  orderNumber: string;
+  customerName?: string | null;
+  totalAmount: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+}
+
+export interface AdminDashboardOverviewResponse {
+  summary: AdminDashboardSummary;
+  revenueTrend: RevenueTrendPoint[];
+  recentOrders: RecentOrderSummary[];
 }
 
 // Review Types

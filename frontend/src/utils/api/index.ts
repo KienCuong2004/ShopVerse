@@ -7,6 +7,7 @@ export { ordersApi } from "./orders";
 export { reviewsApi } from "./reviews";
 export { usersApi } from "./users";
 export { marketingApi } from "./marketing";
+export { dashboardApi } from "./dashboard";
 
 // Export API client
 export { default as apiClient } from "./api";
