@@ -14,6 +14,8 @@ public interface BannerRepository extends JpaRepository<Banner, UUID> {
 
     List<Banner> findAllByOrderByDisplayOrderAscCreatedAtDesc();
 
+    long countByActiveTrue();
+
     @Query("""
             SELECT b FROM Banner b
             WHERE b.active = true

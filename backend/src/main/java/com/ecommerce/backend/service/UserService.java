@@ -50,7 +50,10 @@ public class UserService {
         user.setFullName(registerDTO.getFullName());
         user.setPhone(registerDTO.getPhone());
         user.setAddress(registerDTO.getAddress());
-        user.setRole(User.UserRole.USER);
+        User.UserRole role = registerDTO.getRole() != null
+                ? registerDTO.getRole()
+                : User.UserRole.USER;
+        user.setRole(role);
         user.setEnabled(true);
         
         User savedUser = userRepository.save(user);

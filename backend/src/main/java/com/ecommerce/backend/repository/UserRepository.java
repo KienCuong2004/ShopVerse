@@ -1,9 +1,13 @@
 package com.ecommerce.backend.repository;
 
 import com.ecommerce.backend.model.User;
+import com.ecommerce.backend.model.User.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,5 +23,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmail(String email);
     
     Optional<User> findByUsernameOrEmail(String username, String email);
+
+    long countByRole(UserRole role);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.createdAt >= :startDate")
+    long countByRoleAndCreatedAtAfter(
+            @Param("role") UserRole role,
+            @Param("startDate") LocalDateTime startDate
+    );
 }
 

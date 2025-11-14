@@ -49,5 +49,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     List<Product> findByStockQuantityGreaterThan(Integer quantity);
     
     long countByCategoryId(UUID categoryId);
+
+    long countByStatus(ProductStatus status);
+
+    long countByStockQuantityLessThanEqual(Integer quantity);
 }
 

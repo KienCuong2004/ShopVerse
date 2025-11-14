@@ -1,5 +1,6 @@
 package com.ecommerce.backend.dto;
 
+import com.ecommerce.backend.model.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,5 +28,6 @@ public class RegisterDTO {
     private String fullName;
     private String phone;
     private String address;
+    private User.UserRole role;
 }
 
