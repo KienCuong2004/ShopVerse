@@ -211,9 +211,12 @@ const LoginPage: React.FC = () => {
               <div className="text-center">
                 <p className="text-sm text-gray-400">
                   Chưa có tài khoản?{" "}
-                  <span className="text-blue-600 font-medium">
-                    Liên hệ quản trị viên
-                  </span>
+                  <Link
+                    href="/register"
+                    className="text-blue-600 font-medium hover:underline"
+                  >
+                    Đăng ký ngay
+                  </Link>
                 </p>
               </div>
             </div>
